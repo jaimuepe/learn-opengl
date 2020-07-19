@@ -46,7 +46,12 @@ set("1.getting-started"
     "3.4-shaders-exercise-1"
     "3.5-shaders-exercise-2"
     "3.6-shaders-exercise-3"
-    "4.1-textures")
+    "4.1-textures"
+    "4.2-textures-combined"
+    "4.3-textures-exercise-1"
+    "4.4-textures-exercise-2"
+    "4.5-textures-exercise-3"
+    "4.6-textures-exercise-4")
 
 foreach (CHAPTER ${CHAPTERS})
 
@@ -75,7 +80,8 @@ endforeach(CHAPTER)
 
 set (TEXTURES
     "container.jpg"
-    "wall.jpg")
+    "wall.jpg"
+    "awesomeface.png")
 
 foreach (TEXTURE ${TEXTURES})
     message("Copying texture: ${TEXTURE} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures")
