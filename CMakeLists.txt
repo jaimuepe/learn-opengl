@@ -22,8 +22,9 @@ add_subdirectory("dependencies/glfw")
 add_subdirectory("dependencies/glad")
 add_subdirectory("dependencies/stb_image")
 
-include_directories("dependencies/glfw/include")
 include_directories("dependencies/glad/include")
+include_directories("dependencies/glfw/include")
+include_directories("dependencies/glm/")
 include_directories("dependencies/stb_image/include")
 
 include_directories("src/common")
@@ -51,7 +52,10 @@ set("1.getting-started"
     "4.3-textures-exercise-1"
     "4.4-textures-exercise-2"
     "4.5-textures-exercise-3"
-    "4.6-textures-exercise-4")
+    "4.6-textures-exercise-4"
+    "5.1-transformations"
+    "5.2-transformations-exercise-1"
+    "5.3-transformations-exercise-2")
 
 foreach (CHAPTER ${CHAPTERS})
 

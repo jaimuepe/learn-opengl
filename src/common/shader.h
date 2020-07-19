@@ -85,6 +85,11 @@ public:
     glProgramUniform4f(ID, glGetUniformLocation(ID, name.c_str()), x, y, z, w);
   }
 
+  void setMat4(const std::string &name, const GLfloat *value) {
+    glProgramUniformMatrix4fv(ID, glGetUniformLocation(ID, name.c_str()), 1,
+                              GL_FALSE, value);
+  }
+
 private:
   GLuint ID;
 
