@@ -1,5 +1,6 @@
 
-
+#include <filesystem>
+#include <optional>
 #include <string>
 
 #ifdef _WIN32
@@ -10,6 +11,8 @@
 
 #endif
 
+namespace {
+
 std::string getExecDirectory() {
 
 #ifdef WIN32
@@ -17,16 +20,34 @@ std::string getExecDirectory() {
   WCHAR path[MAX_PATH];
   GetModuleFileNameW(NULL, path, MAX_PATH);
   PathCchRemoveFileSpec(path, MAX_PATH);
-
   return std::string(_bstr_t(path));
 
 #endif
 }
 
-char separator() {
+std::filesystem::path execPath = std::filesystem::path(getExecDirectory());
+
+std::filesystem::path binPath = execPath.parent_path().parent_path();
+
+std::filesystem::path resPath =
+    std::filesystem::path(binPath).append("resources");
+
+} // namespace
+
 #ifdef _WIN32
-  return '\\';
+constexpr char separator = '\\';
 #else
-  return '/';
+constexpr char separator = '/';
 #endif
-}
+
+std::filesystem::path getExecPath() { return execPath; }
+
+std::filesystem::path getBinPath() { return binPath; }
+
+std::filesystem::path getResPath() { return resPath; }
+
+std::string getExecDirectory() { return execPath.string(); }
+
+std::string getBinDirectory() { return binPath.string(); }
+
+std::string getResDirectory() { return resPath.string(); }

@@ -1,7 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "filesystem.h"
+#include "resources.h"
 
 #include <glad/glad.h>
 
@@ -14,8 +14,6 @@ class Shader {
 
 public:
   Shader(const char *vertexFile, const char *fragmentFile) {
-
-    static std::string shadersPath = getExecDirectory();
 
     // retrieve the vertex/fragment source from filePath
 
@@ -32,8 +30,8 @@ public:
     try {
 
       // open files
-      vShaderFile.open(shadersPath + separator() + vertexFile);
-      fShaderFile.open(shadersPath + separator() + fragmentFile);
+      vShaderFile.open(getShaderPath(vertexFile));
+      fShaderFile.open(getShaderPath(fragmentFile));
 
       std::stringstream vShaderStream;
       std::stringstream fShaderStream;

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 
+set (CMAKE_CXX_STANDARD 17)
+
 project(learn-opengl)
 
 if(WIN32)
@@ -10,21 +12,19 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-set(LIBS glfw glad)
+set(LIBS glfw glad stb-image)
 
 if(WIN32)
-# find_library(SHLWAPI Shlwapi.lib) 
-# find_library(PATHCCH pathcch.lib) 
 set(LIBS ${LIBS} Shlwapi pathcch)
 endif(WIN32)
 
-message(" ---------------> ${LIBS}")
+add_subdirectory("dependencies/glfw")
+add_subdirectory("dependencies/glad")
+add_subdirectory("dependencies/stb_image")
 
-add_subdirectory(glfw)
-add_subdirectory(glad)
-
-include_directories("glfw/include")
-include_directories("glad/include")
+include_directories("dependencies/glfw/include")
+include_directories("dependencies/glad/include")
+include_directories("dependencies/stb_image/include")
 
 include_directories("src/common")
 
@@ -45,9 +45,8 @@ set("1.getting-started"
     "3.3-shaders-class"
     "3.4-shaders-exercise-1"
     "3.5-shaders-exercise-2"
-    "3.6-shaders-exercise-3")
-
-add_custom_target(shader-target ALL DEPENDS ${SHADERS})
+    "3.6-shaders-exercise-3"
+    "4.1-textures")
 
 foreach (CHAPTER ${CHAPTERS})
 
@@ -65,7 +64,7 @@ foreach (CHAPTER ${CHAPTERS})
         foreach (SHADER ${SHADERS})
             message("Copying shader: ${SHADER} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CHAPTER}/${DEMO}")
             add_custom_command(
-                TARGET shader-target PRE_BUILD
+                TARGET ${DEMO} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy 
                 ${SHADER} 
                 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CHAPTER}/${DEMO})
@@ -74,3 +73,15 @@ foreach (CHAPTER ${CHAPTERS})
     endforeach(DEMO)
 endforeach(CHAPTER)
 
+set (TEXTURES
+    "container.jpg"
+    "wall.jpg")
+
+foreach (TEXTURE ${TEXTURES})
+    message("Copying texture: ${TEXTURE} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures")
+    configure_file(
+        "resources/textures/${TEXTURE}"
+        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures/${TEXTURE}"
+        COPYONLY
+        )
+endforeach(TEXTURE)
