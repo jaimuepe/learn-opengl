@@ -80,13 +80,7 @@ public:
     m_viewMatrixDirty = true;
   }
 
-  inline glm::vec3 getForward() const { return m_forward; }
-
-  inline glm::vec3 getRight() const {
-    return glm::cross(m_forward, glm::vec3{0.0f, 1.0f, 0.0f});
-  }
-
-  inline glm::mat4 getProjectionMatrix() {
+  inline const glm::mat4 &getProjectionMatrix() {
 
     if (m_projectionMatrixDirty) {
       m_projectionMatrix = glm::perspective(m_fov, m_aspect, m_zNear, m_zFar);
@@ -96,7 +90,7 @@ public:
     return m_projectionMatrix;
   }
 
-  inline glm::mat4 getViewMatrix() {
+  inline const glm::mat4 &getViewMatrix() {
 
     if (m_viewMatrixDirty) {
 
@@ -148,7 +142,7 @@ public:
     return m_viewMatrix;
   }
 
-  inline glm::mat4 getInverseViewMatrix() {
+  inline const glm::mat4& getInverseViewMatrix() {
 
     if (m_viewMatrixDirty || m_inverseViewMatrixDirty) {
       m_inverseViewMatrix = glm::inverse(getViewMatrix());
