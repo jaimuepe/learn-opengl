@@ -1,5 +1,5 @@
 
-#include "camera.h"
+#include "flycamera.h"
 #include "shader.h"
 
 #include <glm/glm.hpp>
@@ -215,8 +215,8 @@ int main() {
   shader.setInt("texture1", 0);
   shader.setInt("texture2", 1);
 
-  Camera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f),
-                800.0f / 600.0f, 0.1f, 100.0f};
+  FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f),
+                   800.0f / 600.0f, 0.1f, 100.0f};
 
   glEnable(GL_DEPTH_TEST);
 

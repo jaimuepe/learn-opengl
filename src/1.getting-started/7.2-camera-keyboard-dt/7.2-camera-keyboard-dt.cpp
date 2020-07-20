@@ -1,5 +1,5 @@
 
-#include "camera.h"
+#include "flycamera.h"
 #include "shader.h"
 
 #include <glm/glm.hpp>
@@ -18,8 +18,8 @@ float cameraSpeed = 3.0f;
 float lastTime = 0.0f;
 float deltaTime = 0.0f;
 
-Camera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f), 800.0f / 600.0f,
-              0.1f, 100.0f};
+FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f),
+                 800.0f / 600.0f, 0.1f, 100.0f};
 
 void process_input(GLFWwindow *window);
 

@@ -1,16 +1,16 @@
 
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef FLY_CAMERA_H
+#define FLY_CAMERA_H
 
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 
-class Camera {
+class FlyCamera {
 
 public:
   // clang-format off
   
-  Camera(
+  FlyCamera(
     const glm::vec3 &pos, 
     float fov, 
     float aspect, 
@@ -26,6 +26,7 @@ public:
         m_forward(glm::vec3{0.0f, 0.0f, -1.0f}),
         m_up(glm::vec3{0.0f, 1.0f, 0.0f}), 
         m_viewMatrixDirty(true),
+        m_inverseViewMatrixDirty(true),
         m_projectionMatrixDirty(true) {}
 
   // clang-format on
@@ -64,6 +65,11 @@ public:
 
     m_forward = glm::normalize(dir);
 
+    m_viewMatrixDirty = true;
+  }
+
+  inline void setPosition(const glm::vec3 &position) {
+    m_position = position;
     m_viewMatrixDirty = true;
   }
 
@@ -133,4 +139,4 @@ private:
   glm::mat4 m_projectionMatrix;
 };
 
-#endif // CAMERA_H
+#endif // FLY_CAMERA_H
