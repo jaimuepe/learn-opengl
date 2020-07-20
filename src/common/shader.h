@@ -73,33 +73,34 @@ public:
     glDeleteShader(fragmentShaderId);
   }
 
-  void use() { glUseProgram(ID); }
+  void use() { glUseProgram(m_ID); }
 
   void setInt(const std::string &name, int value) const {
-    glProgramUniform1i(ID, glGetUniformLocation(ID, name.c_str()), value);
+    glProgramUniform1i(m_ID, glGetUniformLocation(m_ID, name.c_str()), value);
   }
 
   void setFloat(const std::string &name, float value) const {
-    glProgramUniform1f(ID, glGetUniformLocation(ID, name.c_str()), value);
+    glProgramUniform1f(m_ID, glGetUniformLocation(m_ID, name.c_str()), value);
   }
 
   void setFloat4(const std::string &name, float x, float y, float z,
                  float w) const {
-    glProgramUniform4f(ID, glGetUniformLocation(ID, name.c_str()), x, y, z, w);
+    glProgramUniform4f(m_ID, glGetUniformLocation(m_ID, name.c_str()), x, y, z,
+                       w);
   }
 
   void setMat4(const std::string &name, const GLfloat *value) {
-    glProgramUniformMatrix4fv(ID, glGetUniformLocation(ID, name.c_str()), 1,
+    glProgramUniformMatrix4fv(m_ID, glGetUniformLocation(m_ID, name.c_str()), 1,
                               GL_FALSE, value);
   }
 
   void setMat4(const std::string &name, const glm::mat4 &value) {
-    glProgramUniformMatrix4fv(ID, glGetUniformLocation(ID, name.c_str()), 1,
+    glProgramUniformMatrix4fv(m_ID, glGetUniformLocation(m_ID, name.c_str()), 1,
                               GL_FALSE, glm::value_ptr(value));
   }
 
 private:
-  GLuint ID;
+  GLuint m_ID;
 
   bool createShader(const char *shaderCode, GLenum type, GLuint &shaderId) {
 
@@ -129,20 +130,20 @@ private:
 
   bool createProgram(GLuint vertexShaderId, GLuint fragmentShaderId) {
 
-    ID = glCreateProgram();
+    m_ID = glCreateProgram();
 
-    glAttachShader(ID, vertexShaderId);
-    glAttachShader(ID, fragmentShaderId);
+    glAttachShader(m_ID, vertexShaderId);
+    glAttachShader(m_ID, fragmentShaderId);
 
-    glLinkProgram(ID);
+    glLinkProgram(m_ID);
 
     int success;
-    glGetProgramiv(ID, GL_LINK_STATUS, &success);
+    glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
 
     if (!success) {
 
       char infoLog[512];
-      glGetProgramInfoLog(ID, 512, nullptr, infoLog);
+      glGetProgramInfoLog(m_ID, 512, nullptr, infoLog);
 
       std::cout << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
 
