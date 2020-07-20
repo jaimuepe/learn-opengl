@@ -3,6 +3,9 @@
 
 #include "resources.h"
 
+#include <glm\glm.hpp>
+#include <glm\gtc\type_ptr.hpp>
+
 #include <glad/glad.h>
 
 #include <fstream>
@@ -88,6 +91,11 @@ public:
   void setMat4(const std::string &name, const GLfloat *value) {
     glProgramUniformMatrix4fv(ID, glGetUniformLocation(ID, name.c_str()), 1,
                               GL_FALSE, value);
+  }
+
+  void setMat4(const std::string &name, const glm::mat4 &value) {
+    glProgramUniformMatrix4fv(ID, glGetUniformLocation(ID, name.c_str()), 1,
+                              GL_FALSE, glm::value_ptr(value));
   }
 
 private:

@@ -55,7 +55,13 @@ set("1.getting-started"
     "4.6-textures-exercise-4"
     "5.1-transformations"
     "5.2-transformations-exercise-1"
-    "5.3-transformations-exercise-2")
+    "5.3-transformations-exercise-2"
+    "6.1-coordinate-systems"
+    "6.2-coordinate-systems-depth"
+    "6.3-coordinate-systems-multiple"
+    "6.4-coordinate-systems-exercise-1"
+    "6.5-coordinate-systems-exercise-2"
+    "6.6-coordinate-systems-exercise-3")
 
 foreach (CHAPTER ${CHAPTERS})
 
