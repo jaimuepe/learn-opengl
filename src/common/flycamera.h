@@ -24,7 +24,6 @@ public:
         m_yaw(-glm::half_pi<float>()), // -90.0 deg
         m_position(pos),
         m_forward(glm::vec3{0.0f, 0.0f, -1.0f}),
-        m_up(glm::vec3{0.0f, 1.0f, 0.0f}), 
         m_viewMatrixDirty(true),
         m_inverseViewMatrixDirty(true),
         m_projectionMatrixDirty(true) {}
@@ -44,12 +43,15 @@ public:
   }
 
   /**
-   * Transforms a direction from local-space to world-space.
+   * Transforms a direction from view-space to world-space.
    */
   inline glm::vec3 transformDirection(const glm::vec3 &dir) {
     return getInverseViewMatrix() * glm::vec4{dir.x, dir.y, dir.z, 0.0f};
   }
 
+  /**
+   * Rotates with a specific yaw & pitch (no roll atm).
+   */
   inline void rotateTaitBryan(float yaw, float pitch) {
 
     m_yaw += yaw;
@@ -79,7 +81,10 @@ public:
   }
 
   inline glm::vec3 getForward() const { return m_forward; }
-  inline glm::vec3 getRight() const { return glm::cross(m_forward, m_up); }
+
+  inline glm::vec3 getRight() const {
+    return glm::cross(m_forward, glm::vec3{0.0f, 1.0f, 0.0f});
+  }
 
   inline glm::mat4 getProjectionMatrix() {
 
@@ -94,7 +99,49 @@ public:
   inline glm::mat4 getViewMatrix() {
 
     if (m_viewMatrixDirty) {
-      m_viewMatrix = glm::lookAt(m_position, m_position + m_forward, m_up);
+
+      /*
+
+      // lookAt matrix (manually)
+      // ---------
+
+      //
+      //          | Rx  Ry  Rz  0|     | 1  0  0  -Px|
+      // lookAt = | Ux  Uy  Uz  0|  *  | 0  1  0  -Py|
+      //          | Dx  Dy  Dz  0|     | 0  0  1  -Pz|
+      //          |  0   0   0  1|     | 0  0  0    1|
+      // Where:
+      // R = right (view space)
+      // U = up (view space)
+      // D = view direction (negated)
+      // P = camera position
+      //
+      // !!! glm/opengl matrices are in column-major order !!!
+
+      glm::vec3 dir = -m_forward;
+
+      glm::vec3 right =
+          glm::normalize(glm::cross(glm::vec3{0.0f, 1.0f, 0.0f}, dir));
+
+      glm::vec3 up = glm::cross(dir, right);
+
+      m_viewMatrix = glm::mat4{
+        right.x,        up.x,           dir.x,          0.0f,
+        right.y,        up.y,           dir.y,          0.0f,
+        right.z,        up.z,           dir.z,          0.0f,
+        0.0f,           0.0f,           0.0f,           1.0f};
+
+      m_viewMatrix *= glm::mat4{
+        1.0f,           0.0f,           0.0f,           0.0f,
+        0.0f,           1.0f,           0.0f,           0.0f,
+        0.0f,           0.0f,           1.0f,           0.0f,
+        -m_position.x,  -m_position.y,  -m_position.z,  1.0f};
+
+      */
+
+      m_viewMatrix = glm::lookAt(m_position, m_position + m_forward,
+                                 glm::vec3{0.0f, 1.0f, 0.0f});
+
       m_viewMatrixDirty = false;
     }
 
@@ -127,7 +174,6 @@ private:
   glm::vec3 m_position;
 
   glm::vec3 m_forward;
-  glm::vec3 m_up;
 
   glm::mat4 m_viewMatrix;
   bool m_viewMatrixDirty;
