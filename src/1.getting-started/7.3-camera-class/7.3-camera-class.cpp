@@ -18,6 +18,9 @@ float cameraSpeed = 3.0f;
 float lastTime = 0.0f;
 float deltaTime = 0.0f;
 
+float fpsCounterTime = 0.0f;
+int nrFrames = 0;
+
 bool firstMouse = true;
 
 float lastMouseX = 400.0f;
@@ -239,10 +242,30 @@ int main() {
 
   glEnable(GL_DEPTH_TEST);
 
+  // vsync
+  glfwSwapInterval(0);
+
   while (!glfwWindowShouldClose(window)) {
 
     float timeSinceStart = static_cast<float>(glfwGetTime());
     deltaTime = timeSinceStart - lastTime;
+
+    fpsCounterTime += deltaTime;
+
+    nrFrames++;
+
+    if (fpsCounterTime > 1.0f) {
+
+      std::stringstream ss;
+      ss << "LearnOpenGL"
+         << " [" << (1000.0 / static_cast<double>(nrFrames)) << " ms/frame]"
+         << " [ " << nrFrames << " FPS]";
+
+      glfwSetWindowTitle(window, ss.str().c_str());
+
+      nrFrames = 0;
+      fpsCounterTime = 0.0f;
+    }
 
     lastTime = timeSinceStart;
 
