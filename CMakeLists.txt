@@ -63,7 +63,8 @@ set("1.getting-started"
     "6.5-coordinate-systems-exercise-2"
     "6.6-coordinate-systems-exercise-3"
     "7.1-camera-circle"
-    "7.2-camera-keyboard-dt")
+    "7.2-camera-keyboard-dt"
+    "7.3-camera-class")
 
 foreach (CHAPTER ${CHAPTERS})
 
