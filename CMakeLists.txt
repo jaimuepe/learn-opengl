@@ -36,7 +36,7 @@ set(CHAPTERS
     "2.lighting")
 
 set("1.getting-started"
-    "1.1-hello-window"
+    "1-hello-window"
     "2.1-hello-triangle"
     "2.2-hello-triangle-indexed"
     "2.3-hello-triangle-exercise-1"
@@ -69,7 +69,9 @@ set("1.getting-started"
     "7.4-camera-exercise-1")
 
 set("2.lighting"
-    "1.colors")
+    "1.colors"
+    "2.1.basic-lighting-diffuse"
+    "2.2.basic-lighting-specular")
     
 foreach (CHAPTER ${CHAPTERS})
 
