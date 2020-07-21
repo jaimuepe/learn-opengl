@@ -83,15 +83,19 @@ public:
     glProgramUniform1f(m_ID, glGetUniformLocation(m_ID, name.c_str()), value);
   }
 
-  void setFloat4(const std::string &name, float x, float y, float z,
-                 float w) const {
-    glProgramUniform4f(m_ID, glGetUniformLocation(m_ID, name.c_str()), x, y, z,
-                       w);
+  void setVec3(const std::string &name, float x, float y, float z) const {
+    glProgramUniform3f(m_ID, glGetUniformLocation(m_ID, name.c_str()), x, y, z);
   }
 
-  void setMat4(const std::string &name, const GLfloat *value) {
-    glProgramUniformMatrix4fv(m_ID, glGetUniformLocation(m_ID, name.c_str()), 1,
-                              GL_FALSE, value);
+  void setVec3(const std::string &name, const glm::vec3 &vec) const {
+    glProgramUniform3f(m_ID, glGetUniformLocation(m_ID, name.c_str()), vec.x,
+                       vec.y, vec.z);
+  }
+
+  void setVec4(const std::string &name, float x, float y, float z,
+               float w) const {
+    glProgramUniform4f(m_ID, glGetUniformLocation(m_ID, name.c_str()), x, y, z,
+                       w);
   }
 
   void setMat4(const std::string &name, const glm::mat4 &value) {

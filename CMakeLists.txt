@@ -32,7 +32,8 @@ include_directories("src/common")
 link_libraries(${LIBS})
 
 set(CHAPTERS
-    "1.getting-started")
+    "1.getting-started"
+    "2.lighting")
 
 set("1.getting-started"
     "1.1-hello-window"
@@ -67,6 +68,9 @@ set("1.getting-started"
     "7.3-camera-class"
     "7.4-camera-exercise-1")
 
+set("2.lighting"
+    "1.colors")
+    
 foreach (CHAPTER ${CHAPTERS})
 
     foreach(DEMO ${${CHAPTER}})
