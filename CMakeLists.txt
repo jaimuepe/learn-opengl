@@ -74,7 +74,8 @@ set("2.lighting"
     "2.2.2-basic-lighting-specular"
     "2.2.3-basic-lighting-exercise-1"
     "2.2.4-basic-lighting-exercise-2"
-    "2.2.5-basic-lighting-exercise-3")
+    "2.2.5-basic-lighting-exercise-3"
+    "2.3.1-materials")
     
 foreach (CHAPTER ${CHAPTERS})
 
