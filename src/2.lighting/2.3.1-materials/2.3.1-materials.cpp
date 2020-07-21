@@ -209,6 +209,14 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glm::vec3 lightColor;
+    lightColor.x = glm::sin(timeSinceStart * 2.0f);
+    lightColor.y = glm::sin(timeSinceStart * 0.7f);
+    lightColor.z = glm::sin(timeSinceStart * 1.3f);
+
+    glm::vec3 ambientColor = 0.2f * lightColor;
+    glm::vec3 diffuseColor = 0.5f * lightColor;
+
     glm::mat4 model = glm::mat4{1.0f};
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3{0.2f});
@@ -218,6 +226,8 @@ int main() {
     lightCubeShader.setMat4("model", model);
     lightCubeShader.setMat4("view", camera.getViewMatrix());
     lightCubeShader.setMat4("projection", camera.getProjectionMatrix());
+
+    lightCubeShader.setVec3("lightColor", lightColor);
 
     glBindVertexArray(lightVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -230,14 +240,6 @@ int main() {
     lightingShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
     lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("material.shininess", 32.0f);
-
-    glm::vec3 lightColor;
-    lightColor.x = glm::sin(timeSinceStart * 2.0f);
-    lightColor.y = glm::sin(timeSinceStart * 0.7f);
-    lightColor.z = glm::sin(timeSinceStart * 1.3f);
-
-    glm::vec3 ambientColor = 0.2f * lightColor;
-    glm::vec3 diffuseColor = 0.5f * lightColor;
 
     lightingShader.setVec3("light.position", lightPos);
 
