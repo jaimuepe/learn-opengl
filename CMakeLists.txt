@@ -71,7 +71,8 @@ set("1.getting-started"
 set("2.lighting"
     "2.1-colors"
     "2.2.1-basic-lighting-diffuse"
-    "2.2.2-basic-lighting-specular")
+    "2.2.2-basic-lighting-specular"
+    "2.2.3-basic-lighting-exercise-1")
     
 foreach (CHAPTER ${CHAPTERS})
 
