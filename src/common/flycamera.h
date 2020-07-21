@@ -75,6 +75,8 @@ public:
     m_viewMatrixDirty = true;
   }
 
+  inline const glm::vec3 &getPosition() const { return m_position; }
+
   inline void translate(const glm::vec3 &translation) {
     m_position += translation;
     m_viewMatrixDirty = true;
@@ -142,7 +144,7 @@ public:
     return m_viewMatrix;
   }
 
-  inline const glm::mat4& getInverseViewMatrix() {
+  inline const glm::mat4 &getInverseViewMatrix() {
 
     if (m_viewMatrixDirty || m_inverseViewMatrixDirty) {
       m_inverseViewMatrix = glm::inverse(getViewMatrix());

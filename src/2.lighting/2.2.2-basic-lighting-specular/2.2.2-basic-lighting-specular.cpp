@@ -231,6 +231,8 @@ int main() {
     lightingShader.setVec3("lightPos", lightPos);
     lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
+    lightingShader.setVec3("viewPos", camera.getPosition());
+
     lightingShader.setMat4("model", model);
     lightingShader.setMat4("view", camera.getViewMatrix());
     lightingShader.setMat4("projection", camera.getProjectionMatrix());
