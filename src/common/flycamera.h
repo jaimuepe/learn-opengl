@@ -40,6 +40,7 @@ public:
   inline void lookAt(const glm::vec3 &position) {
     m_forward = position - m_position;
     m_viewMatrixDirty = true;
+    m_inverseViewMatrixDirty = true;
   }
 
   /**
@@ -68,11 +69,13 @@ public:
     m_forward = glm::normalize(dir);
 
     m_viewMatrixDirty = true;
+    m_inverseViewMatrixDirty = true;
   }
 
   inline void setPosition(const glm::vec3 &position) {
     m_position = position;
     m_viewMatrixDirty = true;
+    m_inverseViewMatrixDirty = true;
   }
 
   inline const glm::vec3 &getPosition() const { return m_position; }
@@ -82,6 +85,7 @@ public:
   inline void translate(const glm::vec3 &translation) {
     m_position += translation;
     m_viewMatrixDirty = true;
+    m_inverseViewMatrixDirty = true;
   }
 
   inline const glm::mat4 &getProjectionMatrix() {
