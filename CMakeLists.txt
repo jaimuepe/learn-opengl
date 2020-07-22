@@ -84,7 +84,9 @@ set("2.lighting"
     "2.4.4-lighting-maps-exercise-3"
     "2.4.5-lighting-maps-exercise-4"
     "2.5.1-light-casters-directional"
-    "2.5.2-light-casters-point")
+    "2.5.2-light-casters-point"
+    "2.5.3-light-casters-spot"
+    "2.5.4-light-casters-spot-soft")
     
 foreach (CHAPTER ${CHAPTERS})
 
