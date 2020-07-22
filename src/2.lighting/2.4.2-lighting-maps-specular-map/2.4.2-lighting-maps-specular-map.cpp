@@ -328,6 +328,12 @@ int main() {
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
 
+  glDeleteTextures(1, &containerDiffuseMap);
+  glDeleteTextures(1, &containerSpecularMap);
+
+  glDeleteProgram(lightingShader.getID());
+  glDeleteProgram(lightCubeShader.getID());
+
   glfwTerminate();
   return 0;
 }

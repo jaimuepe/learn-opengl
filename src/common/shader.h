@@ -73,30 +73,33 @@ public:
     glDeleteShader(fragmentShaderId);
   }
 
-  void use() { glUseProgram(m_ID); }
+  inline GLuint getID() const { return m_ID; }
 
-  void setInt(const std::string &name, int value) const {
+  inline void use() const { glUseProgram(m_ID); }
+
+  inline void setInt(const std::string &name, int value) const {
     glProgramUniform1i(m_ID, getUniformLocation(name), value);
   }
 
-  void setFloat(const std::string &name, float value) const {
+  inline void setFloat(const std::string &name, float value) const {
     glProgramUniform1f(m_ID, getUniformLocation(name), value);
   }
 
-  void setVec3(const std::string &name, float x, float y, float z) const {
+  inline void setVec3(const std::string &name, float x, float y,
+                      float z) const {
     glProgramUniform3f(m_ID, getUniformLocation(name), x, y, z);
   }
 
-  void setVec3(const std::string &name, const glm::vec3 &vec) const {
+  inline void setVec3(const std::string &name, const glm::vec3 &vec) const {
     glProgramUniform3f(m_ID, getUniformLocation(name), vec.x, vec.y, vec.z);
   }
 
-  void setVec4(const std::string &name, float x, float y, float z,
-               float w) const {
+  inline void setVec4(const std::string &name, float x, float y, float z,
+                      float w) const {
     glProgramUniform4f(m_ID, getUniformLocation(name), x, y, z, w);
   }
 
-  void setMat4(const std::string &name, const glm::mat4 &value) const {
+  inline void setMat4(const std::string &name, const glm::mat4 &value) const {
     glProgramUniformMatrix4fv(m_ID, getUniformLocation(name), 1, GL_FALSE,
                               glm::value_ptr(value));
   }
