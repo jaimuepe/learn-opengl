@@ -166,7 +166,7 @@ int main() {
 
   glBindVertexArray(0);
 
-  Shader lightingShader("basic-lighting.vs", "basic-lighting.fs");
+  Shader lightingShader("material.vs", "material.fs");
   Shader lightCubeShader("light-cube.vs", "light-cube.fs");
 
   stbi_set_flip_vertically_on_load(true);
