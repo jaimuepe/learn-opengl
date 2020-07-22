@@ -77,7 +77,8 @@ set("2.lighting"
     "2.2.5-basic-lighting-exercise-3"
     "2.3.1-materials"
     "2.3.2-materials-exercise-1"
-    "2.3.3-materials-exercise-2")
+    "2.3.3-materials-exercise-2"
+    "2.4.1-lighting-maps-diffuse-map")
     
 foreach (CHAPTER ${CHAPTERS})
 
@@ -104,16 +105,18 @@ foreach (CHAPTER ${CHAPTERS})
     endforeach(DEMO)
 endforeach(CHAPTER)
 
-set (TEXTURES
-    "container.jpg"
-    "wall.jpg"
-    "awesomeface.png")
+file(
+    GLOB TEXTURES
+    "resources/textures/*.jpg"
+    "resources/textures/*.png"
+)
 
 foreach (TEXTURE ${TEXTURES})
-    message("Copying texture: ${TEXTURE} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures")
+    get_filename_component(TEXNAME ${TEXTURE} NAME)
+    message("Copying texture: ${TEXNAME} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures")
     configure_file(
-        "resources/textures/${TEXTURE}"
-        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures/${TEXTURE}"
+        "${TEXTURE}"
+        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures/${TEXNAME}"
         COPYONLY
         )
 endforeach(TEXTURE)
