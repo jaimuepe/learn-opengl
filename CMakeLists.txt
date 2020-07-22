@@ -78,7 +78,8 @@ set("2.lighting"
     "2.3.1-materials"
     "2.3.2-materials-exercise-1"
     "2.3.3-materials-exercise-2"
-    "2.4.1-lighting-maps-diffuse-map")
+    "2.4.1-lighting-maps-diffuse-map"
+    "2.4.2-lighting-maps-specular-map")
     
 foreach (CHAPTER ${CHAPTERS})
 
