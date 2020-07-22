@@ -350,8 +350,8 @@ int main() {
 
     lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
 
-    lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-    lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    lightingShader.setVec3("dirLight.ambient", 0.02f, 0.02f, 0.02f);
+    lightingShader.setVec3("dirLight.diffuse", 0.2f, 0.2f, 0.2f);
     lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
 
     lightingShader.setVec3("viewPos", cameraPos);
@@ -387,6 +387,24 @@ int main() {
                                   "].quadraticAtt",
                               pointLights[i].quadraticAtt);
     }
+
+    // spotlight
+
+    lightingShader.setVec3("spotLight.position", cameraPos);
+    lightingShader.setVec3("spotLight.direction", cameraFwd);
+
+    lightingShader.setFloat("spotLight.innerCutOff",
+                            glm::cos(glm::radians(12.5f)));
+    lightingShader.setFloat("spotLight.outerCutOff",
+                            glm::cos(glm::radians(15.0f)));
+
+    lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+    lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+    lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+
+    lightingShader.setFloat("spotLight.constantAtt", 1.0f);
+    lightingShader.setFloat("spotLight.linearAtt", 0.09f);
+    lightingShader.setFloat("spotLight.quadraticAtt", 0.032f);
 
     glBindVertexArray(VAO);
 
