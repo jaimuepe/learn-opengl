@@ -48,6 +48,7 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
   GLFWwindow *window =
       glfwCreateWindow(800, 600, "LearnOpenGL", nullptr, nullptr);
@@ -65,7 +66,7 @@ int main() {
     return -1;
   }
 
-  glEnable(GL_DEBUG_OUTPUT);
+  glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   glDebugMessageCallback(message_callback, 0);
 
   glfwSetCursorPosCallback(window, cursorPosCallback);

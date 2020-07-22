@@ -76,31 +76,29 @@ public:
   void use() { glUseProgram(m_ID); }
 
   void setInt(const std::string &name, int value) const {
-    glProgramUniform1i(m_ID, glGetUniformLocation(m_ID, name.c_str()), value);
+    glProgramUniform1i(m_ID, getUniformLocation(name), value);
   }
 
   void setFloat(const std::string &name, float value) const {
-    glProgramUniform1f(m_ID, glGetUniformLocation(m_ID, name.c_str()), value);
+    glProgramUniform1f(m_ID, getUniformLocation(name), value);
   }
 
   void setVec3(const std::string &name, float x, float y, float z) const {
-    glProgramUniform3f(m_ID, glGetUniformLocation(m_ID, name.c_str()), x, y, z);
+    glProgramUniform3f(m_ID, getUniformLocation(name), x, y, z);
   }
 
   void setVec3(const std::string &name, const glm::vec3 &vec) const {
-    glProgramUniform3f(m_ID, glGetUniformLocation(m_ID, name.c_str()), vec.x,
-                       vec.y, vec.z);
+    glProgramUniform3f(m_ID, getUniformLocation(name), vec.x, vec.y, vec.z);
   }
 
   void setVec4(const std::string &name, float x, float y, float z,
                float w) const {
-    glProgramUniform4f(m_ID, glGetUniformLocation(m_ID, name.c_str()), x, y, z,
-                       w);
+    glProgramUniform4f(m_ID, getUniformLocation(name), x, y, z, w);
   }
 
-  void setMat4(const std::string &name, const glm::mat4 &value) {
-    glProgramUniformMatrix4fv(m_ID, glGetUniformLocation(m_ID, name.c_str()), 1,
-                              GL_FALSE, glm::value_ptr(value));
+  void setMat4(const std::string &name, const glm::mat4 &value) const {
+    glProgramUniformMatrix4fv(m_ID, getUniformLocation(name), 1, GL_FALSE,
+                              glm::value_ptr(value));
   }
 
 private:
@@ -121,8 +119,7 @@ private:
       char infoLog[512];
       glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
 
-      std::cout << "ERROR::SHADER::"
-                << (type == GL_FRAGMENT_SHADER ? "FRAGMENT" : "VERTEX")
+      std::cout << "v" << (type == GL_FRAGMENT_SHADER ? "FRAGMENT" : "VERTEX")
                 << "::COMPILATION_FAILED\n"
                 << infoLog << std::endl;
 
@@ -155,6 +152,24 @@ private:
     }
 
     return true;
+  }
+
+  int getUniformLocation(const std::string &name) const {
+
+    int loc = glGetUniformLocation(m_ID, name.c_str());
+
+    if (loc == -1) {
+
+      std::stringstream ss;
+      ss << "Undefined uniform in shader " << m_ID << ": " << name;
+
+      std::string message = ss.str();
+
+      glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
+                           m_ID, GL_DEBUG_SEVERITY_MEDIUM, message.length(),
+                           message.c_str());
+    }
+    return loc;
   }
 };
 
