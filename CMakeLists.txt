@@ -36,7 +36,7 @@ set(CHAPTERS
     "2.lighting")
 
 set("1.getting-started"
-    "1.1-hello-window"
+    "1.1.1-hello-window"
     "1.2.1-hello-triangle"
     "1.2.2-hello-triangle-indexed"
     "1.2.3-hello-triangle-exercise-1"
@@ -69,7 +69,7 @@ set("1.getting-started"
     "1.7.4-camera-exercise-1")
 
 set("2.lighting"
-    "2.1-colors"
+    "2.1.1-colors"
     "2.2.1-basic-lighting-diffuse"
     "2.2.2-basic-lighting-specular"
     "2.2.3-basic-lighting-exercise-1"
@@ -86,7 +86,8 @@ set("2.lighting"
     "2.5.1-light-casters-directional"
     "2.5.2-light-casters-point"
     "2.5.3-light-casters-spot"
-    "2.5.4-light-casters-spot-soft")
+    "2.5.4-light-casters-spot-soft"
+    "2.6.1-multiple-lights")
     
 foreach (CHAPTER ${CHAPTERS})
 
