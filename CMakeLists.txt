@@ -87,7 +87,8 @@ set("2.lighting"
     "2.5.2-light-casters-point"
     "2.5.3-light-casters-spot"
     "2.5.4-light-casters-spot-soft"
-    "2.6.1-multiple-lights")
+    "2.6.1-multiple-lights"
+    "2.6.2-multiple-lights-exercise-1")
     
 foreach (CHAPTER ${CHAPTERS})
 
