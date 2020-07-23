@@ -1,3 +1,5 @@
+#ifndef MY_FILESYSTEM_H
+#define MY_FILESYSTEM_H
 
 #include <filesystem>
 #include <optional>
@@ -51,3 +53,5 @@ std::string getExecDirectory() { return execPath.string(); }
 std::string getBinDirectory() { return binPath.string(); }
 
 std::string getResDirectory() { return resPath.string(); }
+
+#endif // MY_FILESYSTEM_H

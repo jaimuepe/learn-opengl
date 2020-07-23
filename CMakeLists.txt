@@ -12,7 +12,7 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-set(LIBS glfw glad stb-image)
+set(LIBS glfw glad stb-image assimp)
 
 if(WIN32)
 set(LIBS ${LIBS} Shlwapi pathcch)
@@ -21,19 +21,33 @@ endif(WIN32)
 add_subdirectory("dependencies/glfw")
 add_subdirectory("dependencies/glad")
 add_subdirectory("dependencies/stb_image")
+add_subdirectory("dependencies/assimp")
 
 include_directories("dependencies/glad/include")
 include_directories("dependencies/glfw/include")
 include_directories("dependencies/glm/")
 include_directories("dependencies/stb_image/include")
+include_directories("dependencies/assimp/include")
 
 include_directories("src/common")
 
 link_libraries(${LIBS})
 
+set (MY_HEADERS
+    "src/common/filesystem.h"
+    "src/common/flycamera.h"
+    "src/common/mesh.h"
+    "src/common/model.h"
+    "src/common/pointlight.h"
+    "src/common/resources.h"
+    "src/common/shader.h"
+    "src/common/texture.h"
+    "src/common/vertex.h")
+
 set(CHAPTERS
     "1.getting-started"
-    "2.lighting")
+    "2.lighting"
+    "3.model-loading")
 
 set("1.getting-started"
     "1.1.1-hello-window"
@@ -89,7 +103,12 @@ set("2.lighting"
     "2.5.4-light-casters-spot-soft"
     "2.6.1-multiple-lights"
     "2.6.2-multiple-lights-exercise-1")
-    
+
+set("3.model-loading"
+    "3.1-model-loading")
+
+add_library(shared ${MY_HEADERS})
+
 foreach (CHAPTER ${CHAPTERS})
 
     foreach(DEMO ${${CHAPTER}})
@@ -120,6 +139,28 @@ file(
     "resources/textures/*.jpg"
     "resources/textures/*.png"
 )
+
+set (MODELS
+    "backpack"
+)
+
+foreach (MODEL ${MODELS})
+
+    file(
+        GLOB FILES
+        "resources/models/backpack/*.*"
+    )
+    message("Copying mdoel: ${MODEL} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/models/${MODEL}")
+    foreach (FILE ${FILES}) 
+        get_filename_component(FILENAME ${FILE} NAME)
+        configure_file(
+            "resources/models/${MODEL}/${FILENAME}"
+            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/models/${MODEL}/${FILENAME}"
+            COPYONLY
+        )
+    endforeach(FILE)
+
+endforeach(MODEL)
 
 foreach (TEXTURE ${TEXTURES})
     get_filename_component(TEXNAME ${TEXTURE} NAME)
