@@ -50,7 +50,8 @@ set (MY_HEADERS
 set(CHAPTERS
     "1.getting-started"
     "2.lighting"
-    "3.model-loading")
+    "3.model-loading"
+    "4.advanced-opengl")
 
 set("1.getting-started"
     "1.1.1-hello-window"
@@ -109,6 +110,10 @@ set("2.lighting"
 
 set("3.model-loading"
     "3.1-model-loading")
+
+set("4.advanced-opengl"
+    "4.1.1-depth-testing"
+    "4.1.2-depth-testing-view")
 
 add_library(shared ${MY_HEADERS})
 
