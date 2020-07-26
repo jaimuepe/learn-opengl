@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.6)
 
-set (CMAKE_CXX_STANDARD 17)
-
 project(learn-opengl)
 
 if(WIN32)
@@ -12,16 +10,21 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+set (CMAKE_CXX_STANDARD 11)
+# assimp must be built with c++11
+add_subdirectory("dependencies/assimp")
+
+set (CMAKE_CXX_STANDARD 17)
+
+add_subdirectory("dependencies/glfw")
+add_subdirectory("dependencies/glad")
+add_subdirectory("dependencies/stb_image")
+
 set(LIBS glfw glad stb-image assimp)
 
 if(WIN32)
 set(LIBS ${LIBS} Shlwapi pathcch)
 endif(WIN32)
-
-add_subdirectory("dependencies/glfw")
-add_subdirectory("dependencies/glad")
-add_subdirectory("dependencies/stb_image")
-add_subdirectory("dependencies/assimp")
 
 include_directories("dependencies/glad/include")
 include_directories("dependencies/glfw/include")
