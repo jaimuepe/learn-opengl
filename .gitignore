@@ -6,6 +6,8 @@
 *.lo
 *.o
 *.obj
+# obj models shouldnt be ignored
+!/resources/models/**
 
 # Precompiled Headers
 *.gch
