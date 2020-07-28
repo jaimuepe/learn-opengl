@@ -114,7 +114,8 @@ set("3.model-loading"
 set("4.advanced-opengl"
     "4.1.1-depth-testing"
     "4.1.2-depth-testing-view"
-    "4.2.1-stencil-testing")
+    "4.2.1-stencil-testing"
+    "4.3.1-blending-discard")
 
 add_library(shared ${MY_HEADERS})
 
