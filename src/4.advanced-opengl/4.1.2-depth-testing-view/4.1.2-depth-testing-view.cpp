@@ -179,11 +179,11 @@ int main() {
   glVertexArrayAttribBinding(planeVAO, 0, 0);
 
   // texcoords
-  glEnableVertexArrayAttrib(cubeVAO, 1);
-  glVertexArrayAttribFormat(cubeVAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
-  glVertexArrayVertexBuffer(cubeVAO, 1, cubeVBO, 3 * sizeof(float),
+  glEnableVertexArrayAttrib(planeVAO, 1);
+  glVertexArrayAttribFormat(planeVAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
+  glVertexArrayVertexBuffer(planeVAO, 1, planeVBO, 3 * sizeof(float),
                             5 * sizeof(float));
-  glVertexArrayAttribBinding(cubeVAO, 1, 1);
+  glVertexArrayAttribBinding(planeVAO, 1, 1);
 
   glBindVertexArray(0);
 
