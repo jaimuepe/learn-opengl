@@ -298,13 +298,12 @@ int main() {
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
 
-    glm::mat4 model = glm::mat4{1.0f};
-
     // cubes
     {
       glBindVertexArray(cubeVAO);
 
-      glm::mat4 model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+      glm::mat4 model = glm::mat4{1.0f};
+      model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
 
       shader.setMat4("model", model);
       glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -320,7 +319,7 @@ int main() {
     {
       glBindVertexArray(planeVAO);
 
-      model = glm::mat4{1.0f};
+      glm::mat4 model = glm::mat4{1.0f};
       shader.setMat4("model", model);
 
       glDrawArrays(GL_TRIANGLES, 0, 6);
