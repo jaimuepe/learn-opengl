@@ -118,7 +118,8 @@ set("4.advanced-opengl"
     "4.3.1-blending-discard"
     "4.3.2-blending-sort"
     "4.4.1-face-culling"
-    "4.5.1-framebuffers")
+    "4.5.1-framebuffers"
+    "4.5.2-framebuffers-postprocessing")
 
 add_library(shared ${MY_HEADERS})
 
