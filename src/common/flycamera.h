@@ -80,6 +80,12 @@ public:
 
   inline const glm::vec3 &getPosition() const { return m_position; }
 
+  inline void setForward(const glm::vec3 &forward) {
+    m_forward = forward;
+    m_viewMatrixDirty = true;
+    m_inverseViewMatrixDirty = true;
+  }
+
   inline const glm::vec3 &getForward() const { return m_forward; }
 
   inline void translate(const glm::vec3 &translation) {
