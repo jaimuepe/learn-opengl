@@ -249,14 +249,11 @@ int main() {
       shader.setMat4("projection", projection);
 
       glBindVertexArray(cubeVAO);
+      
+      glm::mat4 model = glm::mat4{1.0f};
 
-      for (int i = 0; i < 2; ++i) {
-
-        glm::mat4 model = glm::mat4{1.0f};
-
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-      }
+      shader.setMat4("model", model);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
 
       glUseProgram(0);
       glBindVertexArray(0);
