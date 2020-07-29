@@ -117,7 +117,8 @@ set("4.advanced-opengl"
     "4.2.1-stencil-testing"
     "4.3.1-blending-discard"
     "4.3.2-blending-sort"
-    "4.4.1-face-culling")
+    "4.4.1-face-culling"
+    "4.5.1-framebuffers")
 
 add_library(shared ${MY_HEADERS})
 
@@ -137,7 +138,7 @@ foreach (CHAPTER ${CHAPTERS})
         foreach (SHADER ${SHADERS})
             message("Copying shader: ${SHADER} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CHAPTER}/${DEMO}")
             add_custom_command(
-                TARGET ${DEMO} POST_BUILD
+                TARGET ${DEMO} PRE_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy 
                 ${SHADER} 
                 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CHAPTER}/${DEMO})

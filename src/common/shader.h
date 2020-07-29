@@ -16,6 +16,7 @@
 class Shader {
 
 public:
+  Shader() : m_ID(-1){};
   Shader(const char *vertexFile, const char *fragmentFile) {
 
     // retrieve the vertex/fragment source from filePath
