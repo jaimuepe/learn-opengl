@@ -4,15 +4,24 @@
 
 #include "filesystem.h"
 
-std::string getTexturePath(std::string texLocalPath) {
+std::string getTexturePath(const std::string &texLocalPath) {
   return getResPath().append("textures").append(texLocalPath).string();
 }
 
-std::string getShaderPath(std::string shaderLocalPath) {
+std::string getSkyboxPath(const std::string &name,
+                          const std::string &pieceFilename) {
+  return getResPath()
+      .append("cubemaps")
+      .append(name)
+      .append(pieceFilename)
+      .string();
+}
+
+std::string getShaderPath(const std::string &shaderLocalPath) {
   return getExecPath().append(shaderLocalPath).string();
 }
 
-std::string getModelPath(std::string modelLocalPath) {
+std::string getModelPath(const std::string &modelLocalPath) {
   return getResPath().append("models").append(modelLocalPath).string();
 }
 

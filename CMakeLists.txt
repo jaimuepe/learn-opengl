@@ -120,7 +120,8 @@ set("4.advanced-opengl"
     "4.4.1-face-culling"
     "4.5.1-framebuffers"
     "4.5.2-framebuffers-postprocessing"
-    "4.5.3-framebuffers-exercise-1")
+    "4.5.3-framebuffers-exercise-1"
+    "4.6.1-cubemaps-skybox")
 
 add_library(shared ${MY_HEADERS})
 
@@ -159,13 +160,36 @@ set (MODELS
     "backpack"
 )
 
+set (CUBEMAPS
+    "coast")
+
+foreach (CUBEMAP ${CUBEMAPS})
+
+    file(
+        GLOB FILES
+        "resources/cubemaps/${CUBEMAP}/*.*"
+    )
+    
+    message("Copying cubemap: ${CUBEMAP} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/cubemaps/${CUBEMAP}")
+    foreach (FILE ${FILES}) 
+        get_filename_component(FILENAME ${FILE} NAME)
+        configure_file(
+            "resources/cubemaps/${CUBEMAP}/${FILENAME}"
+            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/cubemaps/${CUBEMAP}/${FILENAME}"
+            COPYONLY
+        )
+    endforeach(FILE)
+
+endforeach(CUBEMAP)
+
 foreach (MODEL ${MODELS})
 
     file(
         GLOB FILES
-        "resources/models/backpack/*.*"
+        "resources/models/${MODEL}/*.*"
     )
-    message("Copying mdoel: ${MODEL} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/models/${MODEL}")
+
+    message("Copying model: ${MODEL} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/models/${MODEL}")
     foreach (FILE ${FILES}) 
         get_filename_component(FILENAME ${FILE} NAME)
         configure_file(
