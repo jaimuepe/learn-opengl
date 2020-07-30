@@ -170,6 +170,13 @@ int main() {
 
   std::vector<Shader> shaders = {red, green, blue, yellow};
 
+  std::vector<glm::vec3> cubePositions = {
+      glm::vec3(-1.0f, -1.0f, 0.0f),
+      glm::vec3(1.0f, -1.0f, 0.0f),
+      glm::vec3(-1.0f, 1.0f, 0.0f),
+      glm::vec3(1.0f, 1.0f, 0.0f),
+  };
+
   glUseProgram(0);
 
   while (!glfwWindowShouldClose(window)) {
@@ -205,13 +212,6 @@ int main() {
 
     const glm::mat4 &view = camera.getViewMatrix();
     const glm::mat4 &projection = camera.getProjectionMatrix();
-
-    std::vector<glm::vec3> cubePositions = {
-        glm::vec3(-1.0f, -1.0f, 0.0f),
-        glm::vec3(1.0f, -1.0f, 0.0f),
-        glm::vec3(-1.0f, 1.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 0.0f),
-    };
 
     red.use();
 
