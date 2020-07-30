@@ -162,17 +162,22 @@ private:
 
     int loc = glGetUniformLocation(m_ID, name.c_str());
 
-    if (loc == -1) {
+    /*
+        // this method creates a lot of errors when the glsl compiler decides to
+        // remove a variable. for now i'm going to disable it
 
-      std::stringstream ss;
-      ss << "Undefined uniform in shader " << m_ID << ": " << name;
+        if (loc == -1) {
 
-      std::string message = ss.str();
+          std::stringstream ss;
+          ss << "Undefined uniform in shader " << m_ID << ": " << name;
 
-      glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
-                           m_ID, GL_DEBUG_SEVERITY_MEDIUM, message.length(),
-                           message.c_str());
-    }
+          std::string message = ss.str();
+
+          glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
+                               m_ID, GL_DEBUG_SEVERITY_MEDIUM, message.length(),
+                               message.c_str());
+        }
+    */
     return loc;
   }
 };

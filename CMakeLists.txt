@@ -121,7 +121,8 @@ set("4.advanced-opengl"
     "4.5.1-framebuffers"
     "4.5.2-framebuffers-postprocessing"
     "4.5.3-framebuffers-exercise-1"
-    "4.6.1-cubemaps-skybox")
+    "4.6.1-cubemaps-skybox"
+    "4.6.2-cubemaps-environment-mapping")
 
 add_library(shared ${MY_HEADERS})
 
