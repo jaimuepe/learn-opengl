@@ -10,6 +10,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -17,45 +18,12 @@ class Shader {
 
 public:
   Shader() : m_ID(-1){};
-  Shader(const char *vertexFile, const char *fragmentFile) {
 
-    // retrieve the vertex/fragment source from filePath
+  Shader(const std::string &vertexFile, const std::string &fragmentFile,
+         const std::optional<std::string> &geometryFile = {}) {
 
-    std::string vertexCode;
-    std::string fragmentCode;
-
-    std::ifstream vShaderFile;
-    std::ifstream fShaderFile;
-
-    // ensure ifstream objects can throw exceptions
-    vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-    try {
-
-      // open files
-      vShaderFile.open(getShaderPath(vertexFile));
-      fShaderFile.open(getShaderPath(fragmentFile));
-
-      std::stringstream vShaderStream;
-      std::stringstream fShaderStream;
-
-      // read file buffer contents into streams
-      vShaderStream << vShaderFile.rdbuf();
-      fShaderStream << fShaderFile.rdbuf();
-
-      // close handlers
-      vShaderFile.close();
-      fShaderFile.close();
-
-      // convert into string
-      vertexCode = vShaderStream.str();
-      fragmentCode = fShaderStream.str();
-
-    } catch (std::fstream::failure &e) {
-      std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULY_READ" << std::endl
-                << e.what() << std::endl;
-    }
+    std::string vertexCode = readShaderFile(vertexFile);
+    std::string fragmentCode = readShaderFile(fragmentFile);
 
     const char *vShaderCode = vertexCode.c_str();
     const char *fShaderCode = fragmentCode.c_str();
@@ -64,14 +32,30 @@ public:
 
     GLuint vertexShaderId;
     GLuint fragmentShaderId;
+    std::optional<GLuint> geometryShaderId;
 
     createShader(vShaderCode, GL_VERTEX_SHADER, vertexShaderId);
     createShader(fShaderCode, GL_FRAGMENT_SHADER, fragmentShaderId);
 
-    createProgram(vertexShaderId, fragmentShaderId);
+    if (geometryFile.has_value()) {
+
+      std::string geometryCode = readShaderFile(geometryFile.value());
+      const char *gShaderCode = geometryCode.c_str();
+
+      GLuint gId;
+      createShader(gShaderCode, GL_GEOMETRY_SHADER, gId);
+
+      geometryShaderId = std::optional<GLuint>{gId};
+    }
+
+    createProgram(vertexShaderId, fragmentShaderId, geometryShaderId);
 
     glDeleteShader(vertexShaderId);
     glDeleteShader(fragmentShaderId);
+
+    if (geometryShaderId.has_value()) {
+      glDeleteShader(geometryShaderId.value());
+    }
   }
 
   inline GLuint getID() const { return m_ID; }
@@ -108,6 +92,46 @@ public:
 private:
   GLuint m_ID;
 
+  std::string readShaderFile(const std::string &filename) const {
+
+    std::string code;
+
+    std::ifstream shaderFile;
+
+    // ensure ifstream objects can throw exceptions
+    shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    try {
+
+      // open files
+      shaderFile.open(getShaderPath(filename));
+
+      std::stringstream shaderStream;
+
+      // read file buffer contents into streams
+      shaderStream << shaderFile.rdbuf();
+
+      // close handlers
+      shaderFile.close();
+
+      // convert into string
+      code = shaderStream.str();
+
+    } catch (std::fstream::failure &e) {
+
+      std::stringstream ss;
+      ss << "Error reading shader file " << filename << ":\n" << e.what();
+
+      std::string message = ss.str();
+
+      glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 0,
+                           GL_DEBUG_SEVERITY_HIGH, message.length(),
+                           message.c_str());
+    }
+
+    return code;
+  }
+
   bool createShader(const char *shaderCode, GLenum type, GLuint &shaderId) {
 
     shaderId = glCreateShader(type);
@@ -123,9 +147,29 @@ private:
       char infoLog[512];
       glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
 
-      std::cout << "v" << (type == GL_FRAGMENT_SHADER ? "FRAGMENT" : "VERTEX")
-                << "::COMPILATION_FAILED\n"
-                << infoLog << std::endl;
+      std::string strType;
+      switch (type) {
+      case GL_VERTEX_SHADER:
+        strType = "vertex";
+        break;
+      case GL_GEOMETRY_SHADER:
+        strType = "geometry";
+        break;
+      case GL_FRAGMENT_SHADER:
+        strType = "fragment";
+        break;
+      default:
+        strType = "???";
+      }
+
+      std::stringstream ss;
+      ss << "Error compiling " << strType << " shader:\n" << infoLog;
+
+      std::string message = ss.str();
+
+      glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
+                           shaderId, GL_DEBUG_SEVERITY_HIGH, message.length(),
+                           message.c_str());
 
       return false;
     }
@@ -133,12 +177,17 @@ private:
     return true;
   }
 
-  bool createProgram(GLuint vertexShaderId, GLuint fragmentShaderId) {
+  bool createProgram(GLuint vertexShaderId, GLuint fragmentShaderId,
+                     std::optional<GLuint> geometryShaderId) {
 
     m_ID = glCreateProgram();
 
     glAttachShader(m_ID, vertexShaderId);
     glAttachShader(m_ID, fragmentShaderId);
+
+    if (geometryShaderId.has_value()) {
+      glAttachShader(m_ID, geometryShaderId.value());
+    }
 
     glLinkProgram(m_ID);
 
@@ -150,7 +199,14 @@ private:
       char infoLog[512];
       glGetProgramInfoLog(m_ID, 512, nullptr, infoLog);
 
-      std::cout << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+      std::stringstream ss;
+      ss << "Error linking program " << m_ID << ":\n" << infoLog;
+
+      std::string message = ss.str();
+
+      glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
+                           m_ID, GL_DEBUG_SEVERITY_HIGH, message.length(),
+                           message.c_str());
 
       return false;
     }

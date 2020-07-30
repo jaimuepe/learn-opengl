@@ -123,7 +123,8 @@ set("4.advanced-opengl"
     "4.5.3-framebuffers-exercise-1"
     "4.6.1-cubemaps-skybox"
     "4.6.2-cubemaps-environment-mapping"
-    "4.8.1-advanced-glsl-ubo")
+    "4.8.1-advanced-glsl-ubo"
+    "4.9.1-geometry-shader-houses")
 
 add_library(shared ${MY_HEADERS})
 
@@ -138,6 +139,7 @@ foreach (CHAPTER ${CHAPTERS})
             GLOB SHADERS
             "src/${CHAPTER}/${DEMO}/*.vs"
             "src/${CHAPTER}/${DEMO}/*.fs"
+            "src/${CHAPTER}/${DEMO}/*.gs"
         )
 
         foreach (SHADER ${SHADERS})
