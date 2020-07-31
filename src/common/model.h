@@ -185,6 +185,8 @@ unsigned int textureFromFile(const std::string &path,
   int height;
   int nrChannels;
 
+  stbi_set_flip_vertically_on_load(true);
+
   unsigned char *data =
       stbi_load(filename.c_str(), &width, &height, &nrChannels, 0);
 

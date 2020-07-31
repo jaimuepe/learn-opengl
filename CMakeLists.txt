@@ -51,7 +51,8 @@ set(CHAPTERS
     "1.getting-started"
     "2.lighting"
     "3.model-loading"
-    "4.advanced-opengl")
+    "4.advanced-opengl"
+    )
 
 set("1.getting-started"
     "1.1.1-hello-window"
