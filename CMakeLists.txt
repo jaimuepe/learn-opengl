@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.17)
 
 project(learn-opengl)
 
@@ -6,46 +6,43 @@ if(WIN32)
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 endif(WIN32)
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_STATIC_LIB ON CACHE BOOL "" FORCE)
 
 set (CMAKE_CXX_STANDARD 11)
-# assimp must be built with c++11
 add_subdirectory("dependencies/assimp")
 
 set (CMAKE_CXX_STANDARD 17)
-
-add_subdirectory("dependencies/glfw")
 add_subdirectory("dependencies/glad")
+add_subdirectory("dependencies/glfw")
+add_subdirectory("dependencies/glm")
 add_subdirectory("dependencies/stb_image")
 
-set(LIBS glfw glad stb-image assimp)
+set(LIBS 
+    glfw
+    assimp
+    glad 
+    stb-image 
+)
 
 if(WIN32)
-set(LIBS ${LIBS} Shlwapi pathcch)
+    set(LIBS ${LIBS} Shlwapi pathcch)
 endif(WIN32)
 
-include_directories("dependencies/glad/include")
-include_directories("dependencies/glfw/include")
-include_directories("dependencies/glm/")
-include_directories("dependencies/stb_image/include")
-include_directories("dependencies/assimp/include")
-
-include_directories("src/common")
-
-link_libraries(${LIBS})
-
 set (MY_HEADERS
-    "src/common/filesystem.h"
-    "src/common/flycamera.h"
-    "src/common/mesh.h"
-    "src/common/model.h"
-    "src/common/pointlight.h"
-    "src/common/resources.h"
-    "src/common/shader.h"
-    "src/common/texture.h"
-    "src/common/vertex.h")
+    "src/shared/filesystem.h"
+    "src/shared/flycamera.h"
+    "src/shared/mesh.h"
+    "src/shared/model.h"
+    "src/shared/pointlight.h"
+    "src/shared/resources.h"
+    "src/shared/shader.h"
+    "src/shared/texture.h"
+    "src/shared/vertex.h")
 
 set(CHAPTERS
     "1.getting-started"
@@ -125,9 +122,21 @@ set("4.advanced-opengl"
     "4.6.1-cubemaps-skybox"
     "4.6.2-cubemaps-environment-mapping"
     "4.8.1-advanced-glsl-ubo"
-    "4.9.1-geometry-shader-houses")
+    "4.9.1-geometry-shader-houses"
+    "4.9.2-geometry-shader-exploding"
+    "4.9.3-geometry-shader-normals")
 
-add_library(shared ${MY_HEADERS})
+include_directories(
+    dependencies/assimp/include
+    dependencies/glad/include
+    dependencies/glfw/include
+    dependencies/glm
+    dependencies/stb_image/include
+    src/shared
+)
+
+# add_library(shared ${MY_HEADERS})
+# target_link_libraries(shared ${LIBS})
 
 foreach (CHAPTER ${CHAPTERS})
 
@@ -135,6 +144,8 @@ foreach (CHAPTER ${CHAPTERS})
 
         add_executable(${DEMO} "src/${CHAPTER}/${DEMO}/${DEMO}.cpp")
         set_target_properties(${DEMO} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CHAPTER}/${DEMO}")
+
+        target_link_libraries(${DEMO} ${LIBS})
         
         file(
             GLOB SHADERS
