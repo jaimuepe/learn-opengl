@@ -135,9 +135,6 @@ include_directories(
     src/shared
 )
 
-# add_library(shared ${MY_HEADERS})
-# target_link_libraries(shared ${LIBS})
-
 foreach (CHAPTER ${CHAPTERS})
 
     foreach(DEMO ${${CHAPTER}})
