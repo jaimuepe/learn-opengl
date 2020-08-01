@@ -128,7 +128,8 @@ set("4.advanced-opengl"
     "4.10.1-instancing-quads"
     "4.10.2-asteroids"
     "4.10.3-asteroids-instanced"
-    "4.11.1-multisampling-anti-aliasing-msaa")
+    "4.11.1-multisampling-anti-aliasing-msaa"
+    "4.11.2-multisampling-anti-aliasing-offscreen")
 
 include_directories(
     dependencies/assimp/include
