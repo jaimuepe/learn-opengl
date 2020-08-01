@@ -124,7 +124,8 @@ set("4.advanced-opengl"
     "4.8.1-advanced-glsl-ubo"
     "4.9.1-geometry-shader-houses"
     "4.9.2-geometry-shader-exploding"
-    "4.9.3-geometry-shader-normals")
+    "4.9.3-geometry-shader-normals"
+    "4.10.1-instancing-quads")
 
 include_directories(
     dependencies/assimp/include

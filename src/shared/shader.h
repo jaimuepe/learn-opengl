@@ -70,6 +70,14 @@ public:
     glProgramUniform1f(m_ID, getUniformLocation(name), value);
   }
 
+  inline void setVec2(const std::string &name, float x, float y) const {
+    glProgramUniform2f(m_ID, getUniformLocation(name), x, y);
+  }
+
+  inline void setVec2(const std::string &name, const glm::vec2 &vec) const {
+    glProgramUniform2f(m_ID, getUniformLocation(name), vec.x, vec.y);
+  }
+
   inline void setVec3(const std::string &name, float x, float y,
                       float z) const {
     glProgramUniform3f(m_ID, getUniformLocation(name), x, y, z);
