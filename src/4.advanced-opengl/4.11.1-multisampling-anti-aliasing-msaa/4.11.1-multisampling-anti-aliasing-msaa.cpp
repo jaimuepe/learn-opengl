@@ -28,10 +28,10 @@ bool firstMouse = true;
 float lastMouseX = 400.0f;
 float lastMouseY = 300.0f;
 
-constexpr int WIDTH = 800;
+constexpr int WIDTH = 1600;
 constexpr int HEIGHT = 600;
 
-float aspect = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
+float aspect = static_cast<float>(WIDTH * 0.5f) / static_cast<float>(HEIGHT);
 
 FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f), aspect, 0.1f,
                  100.0f};
@@ -59,7 +59,7 @@ int main() {
   glfwWindowHint(GLFW_SAMPLES, 4);
 
   GLFWwindow *window =
-      glfwCreateWindow(2 * WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
+      glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
 
   if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -147,6 +147,18 @@ int main() {
   glVertexArrayVertexBuffer(cubeVAO, 0, cubeVBO, 0, 5 * sizeof(float));
   glVertexArrayAttribBinding(cubeVAO, 0, 0);
 
+  // off-screen rendering
+
+  GLuint framebuffer;
+  glCreateFramebuffers(1, &framebuffer);
+
+  GLuint texColorBuffer;
+  glCreateTextures(GL_TEXTURE_2D, 1, &texColorBuffer);
+  glTextureStorage2D(texColorBuffer, 1, GL_RGB8, WIDTH, HEIGHT);
+
+  glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0, texColorBuffer,
+                            0);
+
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
 
@@ -207,14 +219,14 @@ int main() {
 
       // left (no AA)
 
-      glViewport(0, 0, 800, 600);
+      glViewport(0, 0, WIDTH / 2, HEIGHT);
       glDisable(GL_MULTISAMPLE);
 
       glDrawArrays(GL_TRIANGLES, 0, 36);
 
       // right (AA)
 
-      glViewport(800, 0, 800, 600);
+      glViewport(WIDTH / 2, 0, WIDTH / 2, HEIGHT);
       glEnable(GL_MULTISAMPLE);
 
       glDrawArrays(GL_TRIANGLES, 0, 36);
