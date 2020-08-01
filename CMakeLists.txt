@@ -127,7 +127,8 @@ set("4.advanced-opengl"
     "4.9.3-geometry-shader-normals"
     "4.10.1-instancing-quads"
     "4.10.2-asteroids"
-    "4.10.3-asteroids-instanced")
+    "4.10.3-asteroids-instanced"
+    "4.11.1-multisampling-anti-aliasing-msaa")
 
 include_directories(
     dependencies/assimp/include
