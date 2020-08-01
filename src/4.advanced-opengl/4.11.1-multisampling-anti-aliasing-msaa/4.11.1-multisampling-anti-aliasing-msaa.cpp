@@ -147,18 +147,6 @@ int main() {
   glVertexArrayVertexBuffer(cubeVAO, 0, cubeVBO, 0, 5 * sizeof(float));
   glVertexArrayAttribBinding(cubeVAO, 0, 0);
 
-  // off-screen rendering
-
-  GLuint framebuffer;
-  glCreateFramebuffers(1, &framebuffer);
-
-  GLuint texColorBuffer;
-  glCreateTextures(GL_TEXTURE_2D, 1, &texColorBuffer);
-  glTextureStorage2D(texColorBuffer, 1, GL_RGB8, WIDTH, HEIGHT);
-
-  glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0, texColorBuffer,
-                            0);
-
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
 
