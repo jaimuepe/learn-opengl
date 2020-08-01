@@ -125,7 +125,8 @@ set("4.advanced-opengl"
     "4.9.1-geometry-shader-houses"
     "4.9.2-geometry-shader-exploding"
     "4.9.3-geometry-shader-normals"
-    "4.10.1-instancing-quads")
+    "4.10.1-instancing-quads"
+    "4.10.2-instancing-asteroids")
 
 include_directories(
     dependencies/assimp/include
@@ -172,6 +173,8 @@ file(
 
 set (MODELS
     "backpack"
+    "rock"
+    "planet"
 )
 
 set (CUBEMAPS
