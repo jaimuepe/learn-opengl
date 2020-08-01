@@ -25,6 +25,8 @@ unsigned int textureFromFile(const std::string &path,
 class Model {
 
 public:
+  std::vector<Mesh> m_meshes;
+
   Model(const std::string &path) { loadModel(path); }
 
   void draw(const Shader &shader) {
@@ -34,7 +36,6 @@ public:
   }
 
 private:
-  std::vector<Mesh> m_meshes;
   std::string m_directory;
 
   void loadModel(const std::string &path) {

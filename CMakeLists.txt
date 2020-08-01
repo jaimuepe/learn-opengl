@@ -126,7 +126,8 @@ set("4.advanced-opengl"
     "4.9.2-geometry-shader-exploding"
     "4.9.3-geometry-shader-normals"
     "4.10.1-instancing-quads"
-    "4.10.2-instancing-asteroids")
+    "4.10.2-asteroids"
+    "4.10.3-asteroids-instanced")
 
 include_directories(
     dependencies/assimp/include

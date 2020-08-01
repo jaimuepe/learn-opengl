@@ -12,7 +12,6 @@
 class Mesh {
 
 public:
-
   std::vector<Vertex> m_vertices;
   std::vector<unsigned int> m_indices;
   std::vector<Texture> m_textures;
@@ -23,6 +22,8 @@ public:
       : m_vertices(vertices), m_indices(indices), m_textures(textures) {
     setupMesh();
   }
+
+  inline GLuint getVAO() const { return m_VAO; }
 
   void draw(const Shader &shader) const {
 
