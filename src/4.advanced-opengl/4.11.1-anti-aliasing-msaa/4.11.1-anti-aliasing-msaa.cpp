@@ -56,7 +56,7 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-  glfwWindowHint(GLFW_SAMPLES, 4);
+  glfwWindowHint(GLFW_SAMPLES, 16);
 
   GLFWwindow *window =
       glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
