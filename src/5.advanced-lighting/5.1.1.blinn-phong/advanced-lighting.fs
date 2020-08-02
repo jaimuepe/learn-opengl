@@ -27,6 +27,8 @@ const int MAX_POINT_LIGHTS = 4;
 uniform int nPointLights;
 uniform PointLight pointLights[MAX_POINT_LIGHTS];
 
+uniform int blinnPhong;
+
 uniform sampler2D diffuse_texture0;
 
 vec3 calculateLight(vec3 normal, vec3 diffuseColor, vec3 specularColor,
@@ -54,7 +56,7 @@ vec3 calculateLight(vec3 normal, vec3 diffuseColor, vec3 specularColor,
 
   float spec;
 
-  if (gl_FragCoord.x > 600) {
+  if (blinnPhong == 1) {
 
     // blinn-phong
 

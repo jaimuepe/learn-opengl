@@ -24,6 +24,8 @@ int nrFrames = 0;
 
 bool firstMouse = true;
 
+bool blinnPhong = true;
+
 constexpr int WIDTH = 1200;
 constexpr int HEIGHT = 900;
 
@@ -382,6 +384,8 @@ int main() {
       }
     }
 
+    lightingShader.setInt("blinnPhong", blinnPhong);
+
     glm::mat4 model{1.0f};
     model = glm::translate(model, glm::vec3{0.0f, -0.5f, 0.0f});
 
@@ -417,6 +421,12 @@ int main() {
 void process_input(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+    blinnPhong = true;
+  } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+    blinnPhong = false;
   }
 
   int front = 0;
