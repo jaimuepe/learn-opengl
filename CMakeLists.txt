@@ -49,6 +49,7 @@ set(CHAPTERS
     "2.lighting"
     "3.model-loading"
     "4.advanced-opengl"
+    "5.advanced-lighting"
     )
 
 set("1.getting-started"
@@ -130,6 +131,9 @@ set("4.advanced-opengl"
     "4.10.3-asteroids-instanced"
     "4.11.1-anti-aliasing-msaa"
     "4.11.2-anti-aliasing-offscreen")
+
+set("5.advanced-lighting"
+    "5.1.1.blinn-phong")
 
 include_directories(
     dependencies/assimp/include
