@@ -1,6 +1,5 @@
 
 #include "flycamera.h"
-#include "model.h"
 #include "pointlight.h"
 #include "shader.h"
 
@@ -86,6 +85,58 @@ int main() {
 
   // clang-format off
 
+
+  float cubeVertices[] = {
+
+      // back face
+       0.5f, -0.5f, -0.5f, // bottom-left
+      -0.5f, -0.5f, -0.5f, // top-left
+       0.5f,  0.5f, -0.5f, // bottom-right
+       0.5f,  0.5f, -0.5f, // bottom-right
+      -0.5f, -0.5f, -0.5f, // top-left
+      -0.5f,  0.5f, -0.5f, // top-right
+
+      // front face
+      -0.5f, -0.5f,  0.5f, // bottom-left
+       0.5f, -0.5f,  0.5f, // bottom-right
+      -0.5f,  0.5f,  0.5f, // top-left
+      -0.5f,  0.5f,  0.5f, // top-left
+       0.5f, -0.5f,  0.5f, // bottom-right
+       0.5f,  0.5f,  0.5f, // top-right
+
+      // left face
+      -0.5f, -0.5f, -0.5f, // bottom-left
+      -0.5f, -0.5f,  0.5f, // bottom-right
+      -0.5f,  0.5f, -0.5f, // top-left
+      -0.5f,  0.5f, -0.5f, // top-left
+      -0.5f, -0.5f,  0.5f, // bottom-right
+      -0.5f,  0.5f,  0.5f, // top-right
+
+      // right face
+       0.5f, -0.5f,  0.5f, // bottom-left
+       0.5f, -0.5f, -0.5f, // bottom-right
+       0.5f,  0.5f,  0.5f, // top-left
+       0.5f,  0.5f,  0.5f, // top-left
+       0.5f, -0.5f, -0.5f, // bottom-right
+       0.5f,  0.5f, -0.5f, // top-right
+
+      // bottom face
+      -0.5f, -0.5f, -0.5f, // bottom-left
+       0.5f, -0.5f, -0.5f, // bottom-right
+      -0.5f, -0.5f,  0.5f, // top-left
+      -0.5f, -0.5f,  0.5f, // top-left
+       0.5f, -0.5f, -0.5f, // bottom-right
+       0.5f, -0.5f,  0.5f, // top-right
+
+      // top-face
+      -0.5f,  0.5f,  0.5f, // bottom-left
+       0.5f,  0.5f,  0.5f, // bottom-right
+      -0.5f,  0.5f, -0.5f, // top-left
+      -0.5f,  0.5f, -0.5f, // top-left
+       0.5f,  0.5f,  0.5f, // bottom-right
+       0.5f,  0.5f, -0.5f, // top-right
+  };
+
   float planeVertices[] = {
       // vposition            // normals           // texcoords
       -10.0f, 0.0f, -10.0f,   0.0f, 1.0f, 0.0f,    0.0f, 10.0f, // top-left
@@ -110,15 +161,24 @@ int main() {
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, camUbo);
   }
 
-  GLuint lightUbo;
+  // cube light
+  GLuint cubeLightVBO;
+  GLuint cubeLightVAO;
   {
-    // light position
-    glCreateBuffers(1, &lightUbo);
-    glNamedBufferData(lightUbo, sizeof(glm::vec4), nullptr, GL_STATIC_DRAW);
+    glCreateBuffers(1, &cubeLightVBO);
+    glNamedBufferData(cubeLightVBO, sizeof(cubeVertices), cubeVertices,
+                      GL_STATIC_DRAW);
 
-    glBindBufferBase(GL_UNIFORM_BUFFER, 1, lightUbo);
+    glCreateVertexArrays(1, &cubeLightVAO);
+
+    // positions
+
+    glEnableVertexArrayAttrib(cubeLightVAO, 0);
+    glVertexArrayAttribFormat(cubeLightVAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayVertexBuffer(cubeLightVAO, 0, cubeLightVBO, 0,
+                              3 * sizeof(float));
+    glVertexArrayAttribBinding(cubeLightVAO, 0, 0);
   }
-
   // quad
 
   GLuint quadVBO;
@@ -172,7 +232,8 @@ int main() {
     glTextureParameteri(woodTex, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTextureParameteri(woodTex, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    glTextureParameteri(woodTex, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(woodTex, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
 
     glTextureParameteri(woodTex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -192,10 +253,39 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  glm::vec3 lightPos{0.0f, 0.0f, 0.0f};
+  std::vector<PointLight> lights{4};
+  {
+    lights[0].position = glm::vec3{-2.0f, 0.0f, -2.0f};
+    lights[0].ambient = glm::vec3{0.05f, 0.05f, 0.05f};
+    lights[0].diffuse = glm::normalize(glm::vec3{1.0f, 0.2f, 0.2f});
+    lights[0].specular = glm::vec3{0.3f, 0.3f, 0.3f};
+
+    lights[1].position = glm::vec3{-2.0f, 0.0f, 2.0f};
+    lights[1].ambient = glm::vec3{0.05f, 0.05f, 0.05f};
+    lights[1].diffuse = glm::normalize(glm::vec3{0.1f, 1.0f, 0.1f});
+    lights[1].specular = glm::vec3{0.3f, 0.3f, 0.3f};
+
+    lights[2].position = glm::vec3{2.0f, 0.0f, -2.0f};
+    lights[2].ambient = glm::vec3{0.05f, 0.05f, 0.05f};
+    lights[2].diffuse = glm::normalize(glm::vec3{1.0f, 1.0f, 0.2f});
+    lights[2].specular = glm::vec3{0.3f, 0.3f, 0.3f};
+
+    lights[3].position = glm::vec3{2.0f, 0.0f, 2.0f};
+    lights[3].ambient = glm::vec3{0.05f, 0.05f, 0.05f};
+    lights[3].diffuse = glm::normalize(glm::vec3{0.1f, 0.1f, 1.0f});
+    lights[3].specular = glm::vec3{0.3f, 0.3f, 0.3f};
+
+    for (int i = 0; i < lights.size(); ++i) {
+      lights[i].constantAtt = 1.0f;
+      lights[i].linearAtt = 0.09f;
+      lights[i].quadraticAtt = 0.032f;
+    }
+  }
 
   Shader lightingShader("advanced-lighting.vs", "advanced-lighting.fs");
   lightingShader.setInt("diffuse_texture0", 0);
+
+  Shader cubeLightShader("cube-light.vs", "cube-light.fs");
 
   glBindTextureUnit(0, woodTex);
 
@@ -230,30 +320,75 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    const glm::mat4 &view = camera.getViewMatrix();
+    const glm::mat4 &projection = camera.getProjectionMatrix();
+
     // uniform buffers
     {
-      const glm::mat4 &view = camera.getViewMatrix();
-      const glm::mat4 &projection = camera.getProjectionMatrix();
-
-      const glm::vec3 lightPosViewSpace =
-          glm::vec3{view * glm::vec4{lightPos, 1.0}};
-
       glNamedBufferSubData(camUbo, 0, sizeof(glm::mat4), glm::value_ptr(view));
       glNamedBufferSubData(camUbo, sizeof(glm::mat4), sizeof(glm::mat4),
                            glm::value_ptr(projection));
-
-      glNamedBufferSubData(lightUbo, 0, sizeof(glm::vec3),
-                           glm::value_ptr(lightPosViewSpace));
     }
 
     glBindVertexArray(quadVAO);
 
     lightingShader.use();
 
+    // light
+    {
+      lightingShader.setInt("nPointLights", lights.size());
+
+      for (int i = 0; i < lights.size(); ++i) {
+
+        const PointLight &light = lights[i];
+
+        // draw light
+        {
+          glBindVertexArray(cubeLightVAO);
+
+          cubeLightShader.use();
+
+          glm::mat4 model = glm::mat4{1.0};
+          model = glm::translate(model, light.position);
+          model = glm::scale(model, glm::vec3{0.1f});
+
+          cubeLightShader.setMat4("model", model);
+          cubeLightShader.setVec3("lightColor", light.diffuse);
+
+          glDrawArrays(GL_TRIANGLES, 0, 36);
+
+          glBindVertexArray(0);
+          glUseProgram(0);
+        }
+
+        // set light data in main shader
+        {
+          std::string arrayLoc = "pointLights[" + std::to_string(i) + "]";
+
+          glm::vec3 lightPosViewSpace =
+              glm::vec3{view * glm::vec4{light.position, 1.0}};
+
+          lightingShader.setVec3(arrayLoc + ".position", lightPosViewSpace);
+
+          lightingShader.setVec3(arrayLoc + ".ambient", light.ambient);
+          lightingShader.setVec3(arrayLoc + ".diffuse", light.diffuse);
+          lightingShader.setVec3(arrayLoc + ".specular", light.specular);
+
+          lightingShader.setFloat(arrayLoc + ".constantAtt", light.constantAtt);
+          lightingShader.setFloat(arrayLoc + ".linearAtt", light.linearAtt);
+          lightingShader.setFloat(arrayLoc + ".quadraticAtt",
+                                  light.quadraticAtt);
+        }
+      }
+    }
+
     glm::mat4 model{1.0f};
     model = glm::translate(model, glm::vec3{0.0f, -0.5f, 0.0f});
 
     lightingShader.setMat4("model", model);
+
+    glBindVertexArray(quadVAO);
+    lightingShader.use();
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -270,7 +405,6 @@ int main() {
   glDeleteBuffers(1, &quadVBO);
 
   glDeleteBuffers(1, &camUbo);
-  glDeleteBuffers(1, &lightUbo);
 
   glDeleteProgram(lightingShader.getID());
   glDeleteTextures(1, &woodTex);
