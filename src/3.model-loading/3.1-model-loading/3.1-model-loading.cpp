@@ -177,10 +177,10 @@ int main() {
 
   stbi_set_flip_vertically_on_load(true);
 
-  std::stringstream ss;
-  ss << getModelPath("backpack") << separator << "backpack.obj";
+  std::stringstream modelPath;
+  modelPath << getModelPath("backpack") << separator << "backpack.obj";
 
-  Model backpack{ss.str()};
+  Model backpack{modelPath.str()};
 
   glEnable(GL_DEPTH_TEST);
 

@@ -17,7 +17,7 @@
 class Shader {
 
 public:
-  Shader() : m_ID(-1){};
+  Shader() : m_ID(0){};
 
   Shader(const std::string &vertexFile, const std::string &fragmentFile,
          const std::optional<std::string> &geometryFile = {}) {

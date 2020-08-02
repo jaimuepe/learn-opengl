@@ -205,6 +205,20 @@ unsigned int textureFromFile(const std::string &path,
     } else if (nrChannels == 4) {
       format = GL_RGBA;
       internalFormat = GL_RGBA8;
+    } else {
+
+      std::stringstream ss;
+      ss << "Unexpected # of channels in texture (" << nrChannels
+         << " channels)" << std::endl;
+
+      std::string message = ss.str();
+
+      glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
+                           textureID, GL_DEBUG_SEVERITY_MEDIUM,
+                           message.length(), message.c_str());
+
+      stbi_image_free(data);
+      return textureID;
     }
 
     glTextureStorage2D(textureID, 1, internalFormat, width, height);

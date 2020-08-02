@@ -275,7 +275,7 @@ int main() {
     lights[3].diffuse = glm::normalize(glm::vec3{0.1f, 0.1f, 1.0f});
     lights[3].specular = glm::vec3{0.3f, 0.3f, 0.3f};
 
-    for (int i = 0; i < lights.size(); ++i) {
+    for (unsigned int i = 0; i < lights.size(); ++i) {
       lights[i].constantAtt = 1.0f;
       lights[i].linearAtt = 0.09f;
       lights[i].quadraticAtt = 0.032f;
@@ -338,7 +338,7 @@ int main() {
     {
       lightingShader.setInt("nPointLights", lights.size());
 
-      for (int i = 0; i < lights.size(); ++i) {
+      for (unsigned int i = 0; i < lights.size(); ++i) {
 
         const PointLight &light = lights[i];
 

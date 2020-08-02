@@ -302,62 +302,66 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // cube light
+    {
 
-    lightCubeShader.use();
-
-    glm::mat4 model = glm::mat4{1.0f};
-    model = glm::translate(model, lightPos);
-
-    lightCubeShader.setVec3("lightColor", lightDiffuse);
-
-    lightCubeShader.setMat4("model", model);
-    lightCubeShader.setMat4("view", camera.getViewMatrix());
-    lightCubeShader.setMat4("projection", camera.getProjectionMatrix());
-
-    glBindVertexArray(lightVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    // objects
-
-    glBindTextureUnit(0, containerDiffuseMap);
-    glBindTextureUnit(1, containerSpecularMap);
-
-    lightingShader.use();
-
-    lightingShader.setFloat("material.shininess", 32.0f);
-
-    // light properties
-    lightingShader.setVec3("light.position", lightPos);
-    lightingShader.setVec3("light.ambient", 0.1f, 0.1f, 0.1f);
-    lightingShader.setVec3("light.diffuse", lightDiffuse);
-    lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-
-    lightingShader.setFloat("light.constantAtt", 1.0f);
-    lightingShader.setFloat("light.linearAtt", 0.09f);
-    lightingShader.setFloat("light.quadraticAtt", 0.032f);
-
-    lightingShader.setVec3("viewPos", camera.getPosition());
-
-    lightingShader.setMat4("view", camera.getViewMatrix());
-    lightingShader.setMat4("projection", camera.getProjectionMatrix());
-
-    glBindVertexArray(VAO);
-
-    for (int i = 0; i < 10; ++i) {
+      lightCubeShader.use();
 
       glm::mat4 model = glm::mat4{1.0f};
-      model = glm::translate(model, cubePositions[i]);
+      model = glm::translate(model, lightPos);
 
-      float angle = 20.0f * i;
-      model =
-          glm::rotate(model, glm::radians(angle), glm::vec3{1.0f, 0.3f, 0.5f});
+      lightCubeShader.setVec3("lightColor", lightDiffuse);
 
-      lightingShader.setMat4("model", model);
-      lightingShader.setMat4("invModel", glm::inverse(model));
+      lightCubeShader.setMat4("model", model);
+      lightCubeShader.setMat4("view", camera.getViewMatrix());
+      lightCubeShader.setMat4("projection", camera.getProjectionMatrix());
 
+      glBindVertexArray(lightVAO);
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
+    // objects
+    {
+
+      glBindTextureUnit(0, containerDiffuseMap);
+      glBindTextureUnit(1, containerSpecularMap);
+
+      lightingShader.use();
+
+      lightingShader.setFloat("material.shininess", 32.0f);
+
+      // light properties
+      lightingShader.setVec3("light.position", lightPos);
+      lightingShader.setVec3("light.ambient", 0.1f, 0.1f, 0.1f);
+      lightingShader.setVec3("light.diffuse", lightDiffuse);
+      lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+      lightingShader.setFloat("light.constantAtt", 1.0f);
+      lightingShader.setFloat("light.linearAtt", 0.09f);
+      lightingShader.setFloat("light.quadraticAtt", 0.032f);
+
+      lightingShader.setVec3("viewPos", camera.getPosition());
+
+      lightingShader.setMat4("view", camera.getViewMatrix());
+      lightingShader.setMat4("projection", camera.getProjectionMatrix());
+
+      glBindVertexArray(VAO);
+
+      for (int i = 0; i < 10; ++i) {
+
+        glm::mat4 model = glm::mat4{1.0f};
+        model = glm::translate(model, cubePositions[i]);
+
+        float angle = 20.0f * i;
+        model = glm::rotate(model, glm::radians(angle),
+                            glm::vec3{1.0f, 0.3f, 0.5f});
+
+        lightingShader.setMat4("model", model);
+        lightingShader.setMat4("invModel", glm::inverse(model));
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+      }
+    }
+    
     glBindVertexArray(0);
 
     // sysevents and buffer swaping

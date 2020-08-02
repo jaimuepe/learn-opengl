@@ -91,7 +91,7 @@ int main() {
 
   unsigned int nrRocks = 100000;
   glm::mat4 *modelMatrices = new glm::mat4[nrRocks];
-  srand(glfwGetTime());
+  srand(static_cast<int>(100.0 * glfwGetTime()));
 
   float radius = 150.f;
   float offset = 25.0f;
@@ -126,7 +126,7 @@ int main() {
     model = glm::scale(model, glm::vec3{scale});
 
     // 3. rotation - random rot around a rotation axis
-    float rotAngle = (rand() % 360);
+    float rotAngle = static_cast<float>(rand() % 360);
     model = glm::rotate(model, rotAngle, glm::vec3{0.4f, 0.6f, 0.8f});
 
     modelMatrices[i] = model;

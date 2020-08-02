@@ -13,14 +13,13 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_STATIC_LIB ON CACHE BOOL "" FORCE)
 
-set (CMAKE_CXX_STANDARD 11)
 add_subdirectory("dependencies/assimp")
 
-set (CMAKE_CXX_STANDARD 17)
 add_subdirectory("dependencies/glad")
 add_subdirectory("dependencies/glfw")
-add_subdirectory("dependencies/glm")
 add_subdirectory("dependencies/stb_image")
+
+set (CMAKE_CXX_STANDARD 17)
 
 set(LIBS 
     glfw
@@ -136,6 +135,7 @@ set("5.advanced-lighting"
     "5.1.1.blinn-phong")
 
 include_directories(
+    SYSTEM
     dependencies/assimp/include
     dependencies/glad/include
     dependencies/glfw/include
@@ -152,6 +152,17 @@ foreach (CHAPTER ${CHAPTERS})
         set_target_properties(${DEMO} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CHAPTER}/${DEMO}")
 
         target_link_libraries(${DEMO} ${LIBS})
+
+        target_compile_definitions(${DEMO} PRIVATE GLM_FORCE_SILENT_WARNINGS=1)
+
+        if(MSVC)
+            # c4100:
+            # The formal parameter is not referenced in the body of the function. 
+            # The unreferenced parameter is ignored.
+            target_compile_options(${DEMO} PRIVATE /W4 /WX /wd4100)
+        else()
+            target_compile_options(${DEMO} PRIVATE -Wall -Wextra -pedantic -Werror)
+        endif(MSVC)
         
         file(
             GLOB SHADERS
