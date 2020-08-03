@@ -423,7 +423,7 @@ int main() {
 
     // second pass
     // draw scene normally
-    if (true) {
+    if (false) {
 
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
