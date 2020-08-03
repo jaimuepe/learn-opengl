@@ -307,10 +307,11 @@ int main() {
     glVertexArrayAttribBinding(screenQuadVAO, 1, 1);
   }
 
-  containerDiffTex = gpu::texture2d::create("container2.png");
-  containerSpecTex = gpu::texture2d::create("container2_specular.png");
+  containerDiffTex = gpu::resources::texture2d::create("container2.png");
+  containerSpecTex =
+      gpu::resources::texture2d::create("container2_specular.png");
 
-  woodTex = gpu::texture2d::create("wood.png");
+  woodTex = gpu::resources::texture2d::create("wood.png");
 
   glCreateTextures(GL_TEXTURE_2D, 1, &whiteTex);
   // 1px x 1px, single color texture (useful for default values)

@@ -5,6 +5,7 @@
 #include "resources.h"
 #include "shader.h"
 #include "texture.h"
+#include "textures.h"
 
 #include <assimp\Importer.hpp>
 #include <assimp\postprocess.h>
@@ -179,76 +180,13 @@ unsigned int textureFromFile(const std::string &path,
 
   std::string filename = directory + separator + path;
 
-  unsigned int textureID;
-  glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
-
-  int width;
-  int height;
-  int nrChannels;
-
-  stbi_set_flip_vertically_on_load(true);
-
-  unsigned char *data =
-      stbi_load(filename.c_str(), &width, &height, &nrChannels, 0);
-
-  if (data) {
-
-    GLenum format;
-    GLenum internalFormat;
-
-    if (nrChannels == 1) {
-      format = GL_RED;
-      internalFormat = GL_R8;
-    } else if (nrChannels == 3) {
-      format = GL_RGB;
-      internalFormat = GL_RGB8;
-    } else if (nrChannels == 4) {
-      format = GL_RGBA;
-      internalFormat = GL_RGBA8;
-    } else {
-
-      std::stringstream ss;
-      ss << "Unexpected # of channels in texture (" << nrChannels
-         << " channels)" << std::endl;
-
-      std::string message = ss.str();
-
-      glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
-                           textureID, GL_DEBUG_SEVERITY_MEDIUM,
-                           message.length(), message.c_str());
-
-      stbi_image_free(data);
-      return textureID;
-    }
-
-    glTextureStorage2D(textureID, 1, internalFormat, width, height);
-    glTextureSubImage2D(textureID, 0, 0, 0, width, height, format,
-                        GL_UNSIGNED_BYTE, data);
-
-    glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_LINEAR);
-    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glGenerateTextureMipmap(textureID);
-
-    stbi_image_free(data);
-
-  } else {
-
-    std::stringstream ss;
-    ss << "Error loading texture: " << filename << std::endl;
-
-    std::string message = ss.str();
-
-    glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
-                         textureID, GL_DEBUG_SEVERITY_MEDIUM, message.length(),
-                         message.c_str());
+  gpu::resources::texture2d::CreateInfo info;
+  {
+    info.generateMipMaps = true;
+    info.minFilter = gpu::resources::texture2d::Filter::LINEAR_MIPMAP_LINEAR;
   }
 
-  return textureID;
+  return gpu::resources::texture2d::create(filename, info);
 }
 
 #endif // MODEL_H

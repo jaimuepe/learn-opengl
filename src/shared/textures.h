@@ -11,6 +11,8 @@
 
 namespace gpu {
 
+namespace resources {
+
 namespace texture2d {
 
 enum class Wrap {
@@ -84,8 +86,6 @@ GLuint mapToGLFilter(Filter filter, unsigned int texId) {
 } // namespace
 
 struct CreateInfo {
-
-  std::string texName;
 
   Wrap wrapS;
   Wrap wrapT;
@@ -185,6 +185,7 @@ unsigned int create(const std::string texName,
 }
 
 }; // namespace texture2d
+}; // namespace resources
 }; // namespace gpu
 
 #endif // TEXTURES_H
