@@ -132,10 +132,10 @@ set("4.advanced-opengl"
     "4.11.2-anti-aliasing-offscreen")
 
 set("5.advanced-lighting"
-    "5.1.1.blinn-phong")
+    "5.1.1.blinn-phong"
+    "5.3.1.shadow.mapping-depth")
 
 include_directories(
-    SYSTEM
     dependencies/assimp/include
     dependencies/glad/include
     dependencies/glfw/include

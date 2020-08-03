@@ -37,6 +37,9 @@ public:
 
   inline float getFov() const { return m_fov; }
 
+  inline float getZFar() const { return m_zFar; }
+  inline float getZNear() const { return m_zNear; }
+
   inline void lookAt(const glm::vec3 &position) {
     m_forward = position - m_position;
     m_viewMatrixDirty = true;
