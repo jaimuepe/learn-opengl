@@ -2,6 +2,7 @@
 #include "flycamera.h"
 #include "pointlight.h"
 #include "shader.h"
+#include "textures.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -55,8 +56,6 @@ FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f), aspect, 0.1f,
 
 void drawScene(const Shader &shader);
 void fillLightInfo(const Shader &shader);
-
-GLuint createTexture(const std::string &texName);
 
 void process_input(GLFWwindow *window);
 
@@ -308,16 +307,18 @@ int main() {
     glVertexArrayAttribBinding(screenQuadVAO, 1, 1);
   }
 
-  containerDiffTex = createTexture("container2.png");
-  containerSpecTex = createTexture("container2_specular.png");
+  containerDiffTex = gpu::texture2d::create("container2.png");
+  containerSpecTex = gpu::texture2d::create("container2_specular.png");
 
-  woodTex = createTexture("wood.png");
+  woodTex = gpu::texture2d::create("wood.png");
 
   glCreateTextures(GL_TEXTURE_2D, 1, &whiteTex);
-
-  float data[] = {0.3f, 0.3f, 0.3f};
-  glTextureStorage2D(whiteTex, 1, GL_RGB8, 1, 1);
-  glTextureSubImage2D(whiteTex, 0, 0, 0, 1, 1, GL_RGB, GL_FLOAT, &data);
+  // 1px x 1px, single color texture (useful for default values)
+  {
+    float data[] = {0.3f, 0.3f, 0.3f};
+    glTextureStorage2D(whiteTex, 1, GL_RGB8, 1, 1);
+    glTextureSubImage2D(whiteTex, 0, 0, 0, 1, 1, GL_RGB, GL_FLOAT, &data);
+  }
 
   // vsync off
   glfwSwapInterval(0);
@@ -483,60 +484,6 @@ int main() {
   glfwTerminate();
 
   return 0;
-}
-
-GLuint createTexture(const std::string &texName) {
-
-  GLuint texId;
-
-  stbi_set_flip_vertically_on_load(true);
-
-  glCreateTextures(GL_TEXTURE_2D, 1, &texId);
-
-  int width;
-  int height;
-  int nrChannels;
-
-  std::string texPath = getTexturePath(texName);
-
-  unsigned char *data =
-      stbi_load(texPath.c_str(), &width, &height, &nrChannels, 0);
-
-  if (data) {
-
-    GLenum internalFormat = nrChannels == 3 ? GL_RGB8 : GL_RGBA8;
-    GLenum format = nrChannels == 3 ? GL_RGB : GL_RGBA;
-
-    glTextureParameteri(texId, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(texId, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glTextureParameteri(texId, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-    glTextureParameteri(texId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTextureStorage2D(texId, 1, internalFormat, width, height);
-    glTextureSubImage2D(texId, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE,
-                        data);
-
-    glGenerateTextureMipmap(texId);
-
-    stbi_image_free(data);
-
-    return texId;
-
-  } else {
-
-    std::stringstream ss;
-    ss << "Could not create texture " << texPath;
-
-    std::string message = ss.str();
-
-    glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
-                         texId, GL_DEBUG_SEVERITY_MEDIUM, message.length(),
-                         message.c_str());
-
-    return 0;
-  }
 }
 
 void fillLightInfo(const Shader &shader) {}
