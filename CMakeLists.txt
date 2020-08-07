@@ -135,7 +135,8 @@ set("5.advanced-lighting"
     "5.1.1.blinn-phong"
     "5.3.1.shadow-mapping-depth"
     "5.3.2.shadow-mapping-base"
-    "5.3.3.shadow-mapping")
+    "5.3.3.shadow-mapping"
+    "5.3.4.point-shadows")
 
 include_directories(
     dependencies/assimp/include
