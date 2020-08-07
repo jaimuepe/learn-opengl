@@ -28,8 +28,8 @@ bool firstMouse = true;
 constexpr int WIDTH = 800;
 constexpr int HEIGHT = 600;
 
-constexpr int SHADOW_WIDTH = 2048;
-constexpr int SHADOW_HEIGHT = 2048;
+constexpr int SHADOW_WIDTH = 1024;
+constexpr int SHADOW_HEIGHT = 1024;
 
 float aspect = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
 
