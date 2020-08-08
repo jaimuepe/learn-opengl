@@ -18,7 +18,8 @@ class Framebuffer : public GpuObject {
 public:
   Framebuffer() { glCreateFramebuffers(1, &m_ID); }
 
-  inline void attachColor(const Texture2D &tex, int colorAttachmentIdx) const {
+  inline void attachColor(const texture::Texture2D &tex,
+                          int colorAttachmentIdx) const {
     glNamedFramebufferTexture(m_ID, GL_COLOR_ATTACHMENT0 + colorAttachmentIdx,
                               tex.getID(), 0);
   };
@@ -30,7 +31,7 @@ public:
                                    GL_RENDERBUFFER, rbo.getID());
   };
 
-  inline void attachDepth(const Texture2D &tex) const {
+  inline void attachDepth(const texture::Texture2D &tex) const {
     glNamedFramebufferTexture(m_ID, GL_DEPTH_ATTACHMENT, tex.getID(), 0);
   };
 
@@ -39,7 +40,7 @@ public:
                                    rbo.getID());
   };
 
-  inline void attachStencil(const Texture2D &tex) const {
+  inline void attachStencil(const texture::Texture2D &tex) const {
     glNamedFramebufferTexture(m_ID, GL_STENCIL_ATTACHMENT, tex.getID(), 0);
   };
 
@@ -48,7 +49,7 @@ public:
                                    rbo.getID());
   };
 
-  inline void attachDepthStencil(const Texture2D &tex) const {
+  inline void attachDepthStencil(const texture::Texture2D &tex) const {
     glNamedFramebufferTexture(m_ID, GL_DEPTH_STENCIL_ATTACHMENT, tex.getID(),
                               0);
   };

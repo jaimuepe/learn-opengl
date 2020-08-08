@@ -1,4 +1,5 @@
 
+#include "cubemap.h"
 #include "flycamera.h"
 #include "framebuffer.h"
 #include "model.h"
@@ -55,10 +56,10 @@ GLuint cubeVBO;
 GLuint screenQuadVBO;
 GLuint screenQuadVAO;
 
-gpu::Texture2D containerDiffTex;
-gpu::Texture2D containerSpecTex;
+gpu::texture::Texture2D containerDiffTex;
+gpu::texture::Texture2D containerSpecTex;
 
-gpu::Texture2D woodTex;
+gpu::texture::Texture2D woodTex;
 
 GLuint whiteTex03;
 GLuint whiteTex10;
@@ -205,8 +206,8 @@ int main() {
   // directional
 
   gpu::Framebuffer depthMapFramebuffer;
-  gpu::Texture2D depthTexture{SHADOW_WIDTH, SHADOW_HEIGHT,
-                              GL_DEPTH_COMPONENT16};
+  gpu::texture::Texture2D depthTexture{SHADOW_WIDTH, SHADOW_HEIGHT,
+                                       GL_DEPTH_COMPONENT16};
 
   depthTexture.setWrapST(gpu::texture::Wrap::CLAMP_TO_BORDER);
   depthTexture.setMinMagFilter(gpu::texture::Filter::NEAREST);
@@ -216,6 +217,8 @@ int main() {
   depthMapFramebuffer.checkStatus();
 
   // omni
+
+  // gpu::Framebuffer depthMapOmniFramebuffers[MAX_POINT_LIGHTS];
 
   GLuint depthMapOmniFBOs[MAX_POINT_LIGHTS];
   GLuint depthCubemaps[MAX_POINT_LIGHTS];
@@ -356,10 +359,10 @@ int main() {
     glVertexArrayAttribBinding(screenQuadVAO, 1, 1);
   }
 
-  containerDiffTex = gpu::Texture2D{"container2.png"};
-  containerSpecTex = gpu::Texture2D{"container2_specular.png"};
+  containerDiffTex = gpu::texture::Texture2D{"container2.png"};
+  containerSpecTex = gpu::texture::Texture2D{"container2_specular.png"};
 
-  woodTex = gpu::Texture2D{"wood.png"};
+  woodTex = gpu::texture::Texture2D{"wood.png"};
 
   glCreateTextures(GL_TEXTURE_2D, 1, &whiteTex03);
   // 1px x 1px, single color texture (useful for default values)

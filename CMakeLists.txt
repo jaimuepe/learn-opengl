@@ -36,6 +36,7 @@ set (MY_HEADERS
     "src/shared/filesystem.h"
     "src/shared/flycamera.h"
     "src/shared/gpuobject.h"
+    "src/shared/cubemap.h"
     "src/shared/mesh.h"
     "src/shared/model.h"
     "src/shared/pointlight.h"
@@ -44,6 +45,7 @@ set (MY_HEADERS
     "src/shared/resources.h"
     "src/shared/shader.h"
     "src/shared/texture.h"
+    "src/shared/texture2d.h"
     "src/shared/vertex.h"
     )
 

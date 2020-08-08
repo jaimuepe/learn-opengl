@@ -19,8 +19,8 @@
 
 std::map<std::string, Texture> textures_loaded;
 
-gpu::Texture2D textureFromFile(const std::string &path,
-                               const std::string &directory);
+gpu::texture::Texture2D textureFromFile(const std::string &path,
+                                        const std::string &directory);
 
 class Model {
 
@@ -158,7 +158,7 @@ private:
 
         Texture texture;
 
-        gpu::Texture2D tex = textureFromFile(texPath, m_directory);
+        gpu::texture::Texture2D tex = textureFromFile(texPath, m_directory);
         texture.id = tex.getID();
         texture.type = typeName;
         texture.path = texPath;
@@ -176,12 +176,12 @@ private:
   }
 };
 
-gpu::Texture2D textureFromFile(const std::string &path,
-                               const std::string &directory) {
+gpu::texture::Texture2D textureFromFile(const std::string &path,
+                                        const std::string &directory) {
 
   std::string filename = directory + separator + path;
 
-  gpu::Texture2D tex{path};
+  gpu::texture::Texture2D tex{path};
   tex.generateMipmap();
   tex.setMinFilter(gpu::texture::Filter::LINEAR_MIPMAP_LINEAR);
 

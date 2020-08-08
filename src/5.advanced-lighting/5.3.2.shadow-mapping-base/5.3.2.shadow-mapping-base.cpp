@@ -44,10 +44,10 @@ GLuint cubeVBO;
 GLuint screenQuadVBO;
 GLuint screenQuadVAO;
 
-gpu::Texture2D containerDiffTex;
-gpu::Texture2D containerSpecTex;
+gpu::texture::Texture2D containerDiffTex;
+gpu::texture::Texture2D containerSpecTex;
 
-gpu::Texture2D woodTex;
+gpu::texture::Texture2D woodTex;
 GLuint whiteTex;
 
 FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f), aspect, 0.1f,
@@ -311,10 +311,10 @@ int main() {
     glVertexArrayAttribBinding(screenQuadVAO, 1, 1);
   }
 
-  containerDiffTex = gpu::Texture2D("container2.png");
-  containerSpecTex = gpu::Texture2D("container2_specular.png");
+  containerDiffTex = gpu::texture::Texture2D("container2.png");
+  containerSpecTex = gpu::texture::Texture2D("container2_specular.png");
 
-  woodTex = gpu::Texture2D("wood.png");
+  woodTex = gpu::texture::Texture2D("wood.png");
 
   glCreateTextures(GL_TEXTURE_2D, 1, &whiteTex);
   // 1px x 1px, single color texture (useful for default values)

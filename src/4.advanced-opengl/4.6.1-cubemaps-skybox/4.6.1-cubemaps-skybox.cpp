@@ -1,4 +1,5 @@
 
+#include "cubemap.h"
 #include "flycamera.h"
 #include "model.h"
 #include "pointlight.h"
@@ -37,8 +38,6 @@ FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f), aspect, 0.1f,
                  100.0f};
 
 void process_input(GLFWwindow *window);
-
-GLuint loadCubemap(const std::string &name);
 
 void GLAPIENTRY message_callback(GLenum source, GLenum type, GLuint id,
                                  GLenum severity, GLsizei length,
@@ -274,7 +273,8 @@ float skyboxVertices[] = {
     stbi_image_free(data);
   }
 
-  GLuint skyBox = loadCubemap("coast");
+  gpu::texture::Cubemap skyBox{"coast",      "right.jpg", "left.jpg", "top.jpg",
+                               "bottom.jpg", "front.jpg", "back.jpg"};
 
   glEnable(GL_DEPTH_TEST);
   // GL_LESS won't work with the skybox since we are forcing it to be at z = 1.0
@@ -353,7 +353,7 @@ float skyboxVertices[] = {
       skyboxShader.setMat4("projection", projection);
 
       glBindVertexArray(skyboxVAO);
-      glBindTextureUnit(0, skyBox);
+      glBindTextureUnit(0, skyBox.getID());
 
       glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -411,51 +411,6 @@ void process_input(GLFWwindow *window) {
     glm::vec3 dirWorldSpace = camera.transformDirection(dirCamSpace);
     camera.translate(dirWorldSpace * speed);
   }
-}
-
-GLuint loadCubemap(const std::string &name) {
-
-  stbi_set_flip_vertically_on_load(false);
-
-  GLuint cubemap;
-  {
-    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &cubemap);
-
-    glTextureParameteri(cubemap, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTextureParameteri(cubemap, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTextureParameteri(cubemap, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(cubemap, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(cubemap, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    std::vector<std::string> faces = {"right.jpg",  "left.jpg",  "top.jpg",
-                                      "bottom.jpg", "front.jpg", "back.jpg"};
-
-    int texWidth;
-    int texHeight;
-    int texNrChannels;
-
-    for (unsigned int i = 0; i < 6; ++i) {
-
-      std::string path = getSkyboxPath(name, faces[i]);
-
-      unsigned char *data =
-          stbi_load(path.c_str(), &texWidth, &texHeight, &texNrChannels, 0);
-
-      if (i == 0) {
-        glTextureStorage2D(cubemap, 1, GL_RGB8, texWidth, texHeight);
-      }
-
-      glTextureSubImage3D(cubemap, 0, 0, 0, i, texWidth, texHeight, 1, GL_RGB,
-                          GL_UNSIGNED_BYTE, data);
-
-      stbi_image_free(data);
-    }
-  }
-
-  stbi_set_flip_vertically_on_load(true);
-
-  return cubemap;
 }
 
 void cursorPosCallback(GLFWwindow *window, double xPos, double yPos) {
