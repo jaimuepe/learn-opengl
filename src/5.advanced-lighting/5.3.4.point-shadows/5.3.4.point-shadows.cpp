@@ -1,4 +1,5 @@
 
+#include "basicmeshes.h"
 #include "cubemap.h"
 #include "flycamera.h"
 #include "framebuffer.h"
@@ -7,6 +8,8 @@
 #include "renderbuffer.h"
 #include "shader.h"
 #include "texture2d.h"
+#include "vertexarray.h"
+#include "vertexbuffer.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -51,8 +54,8 @@ Model *backpack;
 GLuint quadVBO;
 GLuint quadVAO;
 
-GLuint cubeVAO;
-GLuint cubeVBO;
+gpu::VertexArray *cubeVAO;
+gpu::VertexBuffer *cubeVBO;
 
 GLuint screenQuadVBO;
 GLuint screenQuadVAO;
@@ -122,60 +125,9 @@ int main() {
 
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+  std::vector<float> cubeVertices = createCubeVertexData();
+
   // clang-format off
-
-  float cubeVertices[] = {
-    
-      // position             // normals            // texcoords
-      
-      // back face
-       0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f, // bottom-left
-      -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 0.0f, // top-left
-       0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 1.0f, // bottom-right
-       0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 1.0f, // bottom-right
-      -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 0.0f, // top-left
-      -0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f, // top-right
-
-      // front face
-      -0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 0.0f, // bottom-left
-       0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 0.0f, // bottom-right
-      -0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 1.0f, // top-left
-      -0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 1.0f, // top-left
-       0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 0.0f, // bottom-right
-       0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 1.0f, // top-right
-
-      // left face
-      -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 0.0f, // bottom-left
-      -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-      -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 1.0f, // top-left
-      -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 1.0f, // top-left
-      -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-      -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 1.0f, // top-right
-
-      // right face
-       0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 0.0f, // bottom-left
-       0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-       0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f, // top-left
-       0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f, // top-left
-       0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-       0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 1.0f, // top-right
-
-      // bottom face
-      -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 0.0f, // bottom-left
-       0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-      -0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 1.0f, // top-left
-      -0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 1.0f, // top-left
-       0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-       0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 1.0f, // top-right
-
-      // top-face
-      -0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 0.0f, // bottom-left
-       0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-      -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f, // top-left
-      -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f, // top-left
-       0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-       0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 1.0f, // top-right
-  };
 
   float planeVertices[] = {
       // vposition            // normals           // texcoords
@@ -245,37 +197,21 @@ int main() {
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, camUbo);
   }
 
-  // cubes
-  {
-    glCreateBuffers(1, &cubeVBO);
-    glNamedBufferData(cubeVBO, sizeof(cubeVertices), cubeVertices,
-                      GL_STATIC_DRAW);
+  cubeVAO = new gpu::VertexArray{};
+  cubeVBO = new gpu::VertexBuffer{cubeVertices};
 
-    glCreateVertexArrays(1, &cubeVAO);
+  gpu::VertexArrayBufferBindInfo cubeBindInfo;
 
-    // positions
+  cubeBindInfo.pVertexBuffer = cubeVBO;
+  cubeBindInfo.nBindings = 3;
 
-    glEnableVertexArrayAttrib(cubeVAO, 0);
-    glVertexArrayAttribFormat(cubeVAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayVertexBuffer(cubeVAO, 0, cubeVBO, 0, 8 * sizeof(float));
-    glVertexArrayAttribBinding(cubeVAO, 0, 0);
+  size_t indices[] = {0, 1, 2};
+  size_t valuesPerVertex[] = {3, 3, 2};
 
-    // normals
+  cubeBindInfo.pBindIndices = indices;
+  cubeBindInfo.pValuesPerVertex = valuesPerVertex;
 
-    glEnableVertexArrayAttrib(cubeVAO, 1);
-    glVertexArrayAttribFormat(cubeVAO, 1, 3, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayVertexBuffer(cubeVAO, 1, cubeVBO, 3 * sizeof(float),
-                              8 * sizeof(float));
-    glVertexArrayAttribBinding(cubeVAO, 1, 1);
-
-    // texcoords
-
-    glEnableVertexArrayAttrib(cubeVAO, 2);
-    glVertexArrayAttribFormat(cubeVAO, 2, 2, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayVertexBuffer(cubeVAO, 2, cubeVBO, 6 * sizeof(float),
-                              8 * sizeof(float));
-    glVertexArrayAttribBinding(cubeVAO, 2, 2);
-  }
+  cubeVAO->bindBuffer(cubeBindInfo);
 
   // quad
   {
@@ -637,14 +573,14 @@ int main() {
   depthMapFramebuffer.destroy();
 
   glDeleteVertexArrays(1, &quadVAO);
-  glDeleteVertexArrays(1, &cubeVAO);
+  cubeVAO->destroy();
 
   glDeleteBuffers(1, &quadVBO);
-  glDeleteBuffers(1, &cubeVBO);
+  cubeVBO->destroy();
 
   glDeleteBuffers(1, &camUbo);
 
-  glDeleteProgram(lightingShader.getID());
+  lightingShader.destroy();
 
   containerDiffTex.destroy();
   containerSpecTex.destroy();
@@ -659,7 +595,7 @@ int main() {
 
 void drawLightCubes() {
 
-  glBindVertexArray(cubeVAO);
+  cubeVAO->bind();
 
   lightCubeShader.use();
 
@@ -704,7 +640,7 @@ void drawScene(const gpu::Shader &shader) {
     glBindTextureUnit(0, containerDiffTex.getID());
     glBindTextureUnit(1, containerSpecTex.getID());
 
-    glBindVertexArray(cubeVAO);
+    cubeVAO->bind();
 
     // 1
     glm::mat4 model{1.0f};
