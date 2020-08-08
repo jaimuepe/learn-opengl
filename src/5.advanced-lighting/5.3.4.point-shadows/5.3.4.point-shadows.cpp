@@ -1,18 +1,19 @@
 
 #include "flycamera.h"
+#include "framebuffer.h"
 #include "model.h"
 #include "pointlight.h"
+#include "renderbuffer.h"
 #include "shader.h"
-#include "textures.h"
+#include "texture2d.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
 
-#include <glad/glad.h>
-
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
 
 #include <iostream>
 
@@ -54,10 +55,10 @@ GLuint cubeVBO;
 GLuint screenQuadVBO;
 GLuint screenQuadVAO;
 
-GLuint containerDiffTex;
-GLuint containerSpecTex;
+gpu::Texture2D containerDiffTex;
+gpu::Texture2D containerSpecTex;
 
-GLuint woodTex;
+gpu::Texture2D woodTex;
 
 GLuint whiteTex03;
 GLuint whiteTex10;
@@ -203,41 +204,16 @@ int main() {
 
   // directional
 
-  GLuint depthMapFBO;
-  GLuint depthTexture;
-  {
-    glCreateFramebuffers(1, &depthMapFBO);
-    glCreateTextures(GL_TEXTURE_2D, 1, &depthTexture);
+  gpu::Framebuffer depthMapFramebuffer;
+  gpu::Texture2D depthTexture{SHADOW_WIDTH, SHADOW_HEIGHT,
+                              GL_DEPTH_COMPONENT16};
 
-    glTextureStorage2D(depthTexture, 1, GL_DEPTH_COMPONENT16, SHADOW_WIDTH,
-                       SHADOW_HEIGHT);
+  depthTexture.setWrapST(gpu::texture::Wrap::CLAMP_TO_BORDER);
+  depthTexture.setMinMagFilter(gpu::texture::Filter::NEAREST);
+  depthTexture.setBorderColor(glm::vec4{1.0f, 1.0f, 1.0f, 1.0f});
 
-    glTextureParameteri(depthTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(depthTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glTextureParameterfv(depthTexture, GL_TEXTURE_BORDER_COLOR, borderColor);
-
-    // clamp to border to avoid repetition
-    glTextureParameteri(depthTexture, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTextureParameteri(depthTexture, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-    glNamedFramebufferTexture(depthMapFBO, GL_DEPTH_ATTACHMENT, depthTexture,
-                              0);
-
-    if (glCheckNamedFramebufferStatus(depthMapFBO, GL_FRAMEBUFFER) !=
-        GL_FRAMEBUFFER_COMPLETE) {
-
-      std::stringstream ss;
-      ss << "Framebuffer is not complete!";
-
-      std::string message = ss.str();
-
-      glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
-                           depthMapFBO, GL_DEBUG_SEVERITY_MEDIUM,
-                           message.length(), message.c_str());
-    }
-  }
+  depthMapFramebuffer.attachDepth(depthTexture);
+  depthMapFramebuffer.checkStatus();
 
   // omni
 
@@ -380,11 +356,10 @@ int main() {
     glVertexArrayAttribBinding(screenQuadVAO, 1, 1);
   }
 
-  containerDiffTex = gpu::resources::texture2d::create("container2.png");
-  containerSpecTex =
-      gpu::resources::texture2d::create("container2_specular.png");
+  containerDiffTex = gpu::Texture2D{"container2.png"};
+  containerSpecTex = gpu::Texture2D{"container2_specular.png"};
 
-  woodTex = gpu::resources::texture2d::create("wood.png");
+  woodTex = gpu::Texture2D{"wood.png"};
 
   glCreateTextures(GL_TEXTURE_2D, 1, &whiteTex03);
   // 1px x 1px, single color texture (useful for default values)
@@ -532,9 +507,11 @@ int main() {
 
       // dir light
 
-      glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+      depthMapFramebuffer.bind();
+
       glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
       glClear(GL_DEPTH_BUFFER_BIT);
+
       drawScene(shadowMappingDepthShader);
 
       // point lights
@@ -666,7 +643,7 @@ int main() {
         }
       }
 
-      glBindTextureUnit(2, depthTexture);
+      glBindTextureUnit(2, depthTexture.getID());
 
       drawScene(lightingShader);
       drawLightCubes();
@@ -682,6 +659,8 @@ int main() {
 
   delete suzzane;
 
+  depthMapFramebuffer.destroy();
+
   glDeleteVertexArrays(1, &quadVAO);
   glDeleteVertexArrays(1, &cubeVAO);
 
@@ -692,8 +671,8 @@ int main() {
 
   glDeleteProgram(lightingShader.getID());
 
-  glDeleteTextures(1, &containerDiffTex);
-  glDeleteTextures(1, &containerSpecTex);
+  containerDiffTex.destroy();
+  containerSpecTex.destroy();
 
   glDeleteTextures(1, &whiteTex03);
   glDeleteTextures(1, &whiteTex10);
@@ -732,7 +711,7 @@ void drawScene(const Shader &shader) {
 
   // floor
   {
-    glBindTextureUnit(0, woodTex);
+    glBindTextureUnit(0, woodTex.getID());
     glBindTextureUnit(1, whiteTex03);
 
     glBindVertexArray(quadVAO);
@@ -747,8 +726,8 @@ void drawScene(const Shader &shader) {
 
   // cubes
   {
-    glBindTextureUnit(0, containerDiffTex);
-    glBindTextureUnit(1, containerSpecTex);
+    glBindTextureUnit(0, containerDiffTex.getID());
+    glBindTextureUnit(1, containerSpecTex.getID());
 
     glBindVertexArray(cubeVAO);
 

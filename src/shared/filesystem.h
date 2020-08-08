@@ -7,6 +7,9 @@
 
 #ifdef _WIN32
 
+// to avoid redefinition warning
+#undef APIENTRY
+
 #include <Windows.h>
 #include <comdef.h>
 #include <pathcch.h>

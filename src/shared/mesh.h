@@ -2,12 +2,17 @@
 #define MESH_H
 
 #include "shader.h"
-#include "texture.h"
 #include "vertex.h"
 
 #include <glad/glad.h>
 
 #include <vector>
+
+struct Texture {
+  unsigned int id;
+  std::string type;
+  std::string path;
+};
 
 class Mesh {
 

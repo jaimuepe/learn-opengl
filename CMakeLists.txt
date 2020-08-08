@@ -35,13 +35,17 @@ endif(WIN32)
 set (MY_HEADERS
     "src/shared/filesystem.h"
     "src/shared/flycamera.h"
+    "src/shared/gpuobject.h"
     "src/shared/mesh.h"
     "src/shared/model.h"
     "src/shared/pointlight.h"
+    "src/shared/renderbuffer.h"
+    "src/shared/framebuffer.h"
     "src/shared/resources.h"
     "src/shared/shader.h"
     "src/shared/texture.h"
-    "src/shared/vertex.h")
+    "src/shared/vertex.h"
+    )
 
 set(CHAPTERS
     "1.getting-started"
@@ -146,6 +150,20 @@ include_directories(
     dependencies/stb_image/include
     src/shared
 )
+
+add_library(shared_lib ${MY_HEADERS})
+
+target_link_libraries(shared_lib ${LIBS})
+target_compile_definitions(shared_lib PRIVATE GLM_FORCE_SILENT_WARNINGS=1)
+
+if(MSVC)
+# c4100:
+# The formal parameter is not referenced in the body of the function. 
+# The unreferenced parameter is ignored.
+    target_compile_options(shared_lib PRIVATE /W4 /WX /wd4100)
+else()
+    target_compile_options(shared_lib PRIVATE -Wall -Wextra -pedantic -Werror)
+endif(MSVC)
 
 foreach (CHAPTER ${CHAPTERS})
 

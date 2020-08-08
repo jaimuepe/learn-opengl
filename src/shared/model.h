@@ -4,8 +4,7 @@
 #include "mesh.h"
 #include "resources.h"
 #include "shader.h"
-#include "texture.h"
-#include "textures.h"
+#include "texture2d.h"
 
 #include <assimp\Importer.hpp>
 #include <assimp\postprocess.h>
@@ -20,8 +19,8 @@
 
 std::map<std::string, Texture> textures_loaded;
 
-unsigned int textureFromFile(const std::string &path,
-                             const std::string &directory);
+gpu::Texture2D textureFromFile(const std::string &path,
+                               const std::string &directory);
 
 class Model {
 
@@ -158,7 +157,9 @@ private:
       if (it == textures_loaded.end()) {
 
         Texture texture;
-        texture.id = textureFromFile(texPath, m_directory);
+
+        gpu::Texture2D tex = textureFromFile(texPath, m_directory);
+        texture.id = tex.getID();
         texture.type = typeName;
         texture.path = texPath;
 
@@ -175,18 +176,16 @@ private:
   }
 };
 
-unsigned int textureFromFile(const std::string &path,
-                             const std::string &directory) {
+gpu::Texture2D textureFromFile(const std::string &path,
+                               const std::string &directory) {
 
   std::string filename = directory + separator + path;
 
-  gpu::resources::texture2d::CreateInfo info;
-  {
-    info.generateMipMaps = true;
-    info.minFilter = gpu::resources::texture2d::Filter::LINEAR_MIPMAP_LINEAR;
-  }
+  gpu::Texture2D tex{path};
+  tex.generateMipmap();
+  tex.setMinFilter(gpu::texture::Filter::LINEAR_MIPMAP_LINEAR);
 
-  return gpu::resources::texture2d::create(filename, info);
+  return tex;
 }
 
 #endif // MODEL_H
