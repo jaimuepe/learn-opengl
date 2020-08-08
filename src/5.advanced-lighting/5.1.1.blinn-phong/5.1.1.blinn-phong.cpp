@@ -284,10 +284,10 @@ int main() {
     }
   }
 
-  Shader lightingShader("advanced-lighting.vs", "advanced-lighting.fs");
+  gpu::Shader lightingShader("advanced-lighting.vs", "advanced-lighting.fs");
   lightingShader.setInt("diffuse_texture0", 0);
 
-  Shader cubeLightShader("cube-light.vs", "cube-light.fs");
+  gpu::Shader cubeLightShader("cube-light.vs", "cube-light.fs");
 
   glBindTextureUnit(0, woodTex);
 

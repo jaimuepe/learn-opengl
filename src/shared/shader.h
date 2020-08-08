@@ -1,6 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include "gpuobject.h"
 #include "resources.h"
 
 #include <glm\glm.hpp>
@@ -14,10 +15,12 @@
 #include <sstream>
 #include <string>
 
-class Shader {
+namespace gpu {
+
+class Shader : public GpuObject {
 
 public:
-  Shader() : m_ID(0){};
+  Shader(){};
 
   Shader(const std::string &vertexFile, const std::string &fragmentFile,
          const std::optional<std::string> &geometryFile = {}) {
@@ -58,8 +61,6 @@ public:
     }
   }
 
-  inline GLuint getID() const { return m_ID; }
-
   inline void use() const { glUseProgram(m_ID); }
 
   inline void setInt(const std::string &name, int value) const {
@@ -97,9 +98,12 @@ public:
                               glm::value_ptr(value));
   }
 
-private:
-  GLuint m_ID;
+  inline void destroy() override {
+    glDeleteProgram(m_ID);
+    m_ID = 0;
+  }
 
+private:
   std::string readShaderFile(const std::string &filename) const {
 
     std::string code;
@@ -245,5 +249,7 @@ private:
     return loc;
   }
 };
+
+} // namespace gpu
 
 #endif // SHADER_H

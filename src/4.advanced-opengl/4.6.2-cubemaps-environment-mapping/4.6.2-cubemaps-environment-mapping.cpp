@@ -31,9 +31,9 @@ float lastMouseY = 300.0f;
 constexpr int WIDTH = 1360;
 constexpr int HEIGHT = 768;
 
-Shader *shader;
-Shader reflectShader;
-Shader refractShader;
+gpu::Shader *shader;
+gpu::Shader reflectShader;
+gpu::Shader refractShader;
 
 float aspect = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
 
@@ -196,10 +196,10 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  Shader skyboxShader("skybox.vs", "skybox.fs");
+  gpu::Shader skyboxShader("skybox.vs", "skybox.fs");
 
-  reflectShader = Shader{"reflection.vs", "reflection.fs"};
-  refractShader = Shader{"reflection.vs", "refraction.fs"};
+  reflectShader = gpu::Shader{"reflection.vs", "reflection.fs"};
+  refractShader = gpu::Shader{"reflection.vs", "refraction.fs"};
 
   std::stringstream modelPath;
   modelPath << getModelPath("backpack") << separator << "backpack.obj";

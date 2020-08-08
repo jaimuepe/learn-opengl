@@ -122,7 +122,7 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  Shader shader("instancing.vs", "instancing.fs");
+gpu::Shader shader("instancing.vs", "instancing.fs");
 
   while (!glfwWindowShouldClose(window)) {
 

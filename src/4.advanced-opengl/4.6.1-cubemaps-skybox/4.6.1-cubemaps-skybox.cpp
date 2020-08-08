@@ -284,8 +284,8 @@ float skyboxVertices[] = {
   // vsync off
   glfwSwapInterval(0);
 
-  Shader shader("cubemaps.vs", "cubemaps.fs");
-  Shader skyboxShader("skybox.vs", "skybox.fs");
+gpu::Shader shader("cubemaps.vs", "cubemaps.fs");
+gpu::Shader skyboxShader("skybox.vs", "skybox.fs");
 
   shader.use();
   shader.setInt("texture0", 0);

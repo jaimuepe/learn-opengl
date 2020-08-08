@@ -143,8 +143,8 @@ int main() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  Shader shader("shader.vs", "shader.fs");
-  Shader instancedShader("instanced.vs", "instanced.fs");
+  gpu::Shader shader("shader.vs", "shader.fs");
+  gpu::Shader instancedShader("instanced.vs", "instanced.fs");
 
   std::stringstream rockObjPath;
   rockObjPath << getModelPath("rock") << separator << "rock.obj";

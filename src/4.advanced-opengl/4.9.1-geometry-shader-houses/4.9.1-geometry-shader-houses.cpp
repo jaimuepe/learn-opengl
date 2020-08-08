@@ -115,7 +115,7 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  Shader shader("shader.vs", "shader.fs", "shader.gs");
+gpu::Shader shader("shader.vs", "shader.fs", "shader.gs");
 
   while (!glfwWindowShouldClose(window)) {
 

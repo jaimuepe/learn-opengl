@@ -93,7 +93,7 @@ int main() {
 
   glBindVertexArray(0);
 
-  Shader shader("shader.vs", "shader.fs");
+  gpu::Shader shader("shader.vs", "shader.fs");
 
   while (!glfwWindowShouldClose(window)) {
 

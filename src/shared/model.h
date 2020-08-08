@@ -29,7 +29,7 @@ public:
 
   Model(const std::string &path) { loadModel(path); }
 
-  void draw(const Shader &shader) {
+  void draw(const gpu::Shader &shader) {
     for (unsigned int i = 0; i < m_meshes.size(); ++i) {
       m_meshes[i].draw(shader);
     }

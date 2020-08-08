@@ -251,7 +251,7 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  Shader shader("depth-testing.vs", "depth-testing.fs");
+gpu::Shader shader("depth-testing.vs", "depth-testing.fs");
 
   shader.use();
   shader.setInt("texture0", 0);

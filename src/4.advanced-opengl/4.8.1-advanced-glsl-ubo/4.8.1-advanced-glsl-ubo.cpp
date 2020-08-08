@@ -158,17 +158,17 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  Shader red("plain-color.vs", "plain-color.fs");
-  Shader green("plain-color.vs", "plain-color.fs");
-  Shader blue("plain-color.vs", "plain-color.fs");
-  Shader yellow("plain-color.vs", "plain-color.fs");
+  gpu::Shader red("plain-color.vs", "plain-color.fs");
+  gpu::Shader green("plain-color.vs", "plain-color.fs");
+  gpu::Shader blue("plain-color.vs", "plain-color.fs");
+  gpu::Shader yellow("plain-color.vs", "plain-color.fs");
 
   red.setVec3("color", glm::vec3{1.0f, 0.0f, 0.0f});
   green.setVec3("color", glm::vec3{0.0f, 1.0f, 0.0f});
   blue.setVec3("color", glm::vec3{0.0f, 0.0f, 1.0f});
   yellow.setVec3("color", glm::vec3{1.0f, 1.0f, 0.0f});
 
-  std::vector<Shader> shaders = {red, green, blue, yellow};
+  std::vector<gpu::Shader> shaders = {red, green, blue, yellow};
 
   std::vector<glm::vec3> cubePositions = {
       glm::vec3(-1.0f, -1.0f, 0.0f),

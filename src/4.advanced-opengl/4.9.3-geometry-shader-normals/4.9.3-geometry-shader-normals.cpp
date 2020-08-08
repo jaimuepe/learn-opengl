@@ -95,9 +95,9 @@ int main() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  Shader shader("shader.vs", "shader.fs");
-  Shader d_faceNormals("debug-face-normals.vs", "debug-face-normals.fs",
-                       "debug-face-normals.gs");
+  gpu::Shader shader("shader.vs", "shader.fs");
+  gpu::Shader d_faceNormals("debug-face-normals.vs", "debug-face-normals.fs",
+                            "debug-face-normals.gs");
 
   std::stringstream modelPath;
   modelPath << getModelPath("backpack") << separator << "backpack.obj";

@@ -14,7 +14,6 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_STATIC_LIB ON CACHE BOOL "" FORCE)
 
 add_subdirectory("dependencies/assimp")
-
 add_subdirectory("dependencies/glad")
 add_subdirectory("dependencies/glfw")
 add_subdirectory("dependencies/stb_image")

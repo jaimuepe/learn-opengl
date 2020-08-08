@@ -250,8 +250,8 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  Shader shader("flat-color.vs", "flat-color.fs");
-  Shader screenShader("screen-quad.vs", "screen-quad.fs");
+  gpu::Shader shader("flat-color.vs", "flat-color.fs");
+  gpu::Shader screenShader("screen-quad.vs", "screen-quad.fs");
 
   shader.use();
   shader.setVec3("color", glm::vec3{0.0f, 1.0f, 0.0f});

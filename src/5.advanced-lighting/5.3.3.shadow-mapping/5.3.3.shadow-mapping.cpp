@@ -58,8 +58,8 @@ GLuint whiteTex10;
 FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f), aspect, 0.1f,
                  100.0f};
 
-void drawScene(const Shader &shader);
-void fillLightInfo(const Shader &shader);
+void drawScene(const gpu::Shader &shader);
+void fillLightInfo(const gpu::Shader &shader);
 
 void process_input(GLFWwindow *window);
 
@@ -350,12 +350,12 @@ int main() {
 
   suzzane = new Model{monkeyModelPath.str()};
 
-  Shader lightingShader("lit-shadows.vs", "lit-shadows.fs");
+gpu::Shader lightingShader("lit-shadows.vs", "lit-shadows.fs");
 
-  Shader shadowMappingDepthShader("shadow-mapping-depth.vs",
+gpu::Shader shadowMappingDepthShader("shadow-mapping-depth.vs",
                                   "shadow-mapping-depth.fs");
 
-  Shader debugScreenShader("debug-quad-depth.vs", "debug-quad-depth.fs");
+gpu::Shader debugScreenShader("debug-quad-depth.vs", "debug-quad-depth.fs");
 
   lightingShader.setInt("diffuse_texture0", 0);
   lightingShader.setInt("specular_texture0", 1);
@@ -503,9 +503,9 @@ int main() {
   return 0;
 }
 
-void fillLightInfo(const Shader &shader) {}
+void fillLightInfo(const gpu::Shader &shader) {}
 
-void drawScene(const Shader &shader) {
+void drawScene(const gpu::Shader &shader) {
 
   shader.use();
 

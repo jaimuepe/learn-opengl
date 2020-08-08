@@ -137,7 +137,7 @@ int main() {
 
   glBindVertexArray(0);
 
-  Shader shader("shader.vs", "shader.fs");
+gpu::Shader shader("shader.vs", "shader.fs");
 
   stbi_set_flip_vertically_on_load(true);
 

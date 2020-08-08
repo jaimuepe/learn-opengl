@@ -30,7 +30,7 @@ public:
 
   inline GLuint getVAO() const { return m_VAO; }
 
-  void draw(const Shader &shader) const {
+  void draw(const gpu::Shader &shader) const {
 
     unsigned int diffuseNr = 0;
     unsigned int specularNr = 0;

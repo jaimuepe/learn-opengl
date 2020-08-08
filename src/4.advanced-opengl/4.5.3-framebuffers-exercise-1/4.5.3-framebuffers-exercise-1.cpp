@@ -36,8 +36,8 @@ float aspect = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
 FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f), aspect, 0.1f,
                  100.0f};
 
-Shader shader;
-Shader screenShader;
+gpu::Shader shader;
+gpu::Shader screenShader;
 
 GLuint cubeVAO;
 GLuint planeVAO;
@@ -319,8 +319,9 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  shader = Shader("framebuffers.vs", "framebuffers.fs");
-  screenShader = Shader("framebuffers-screen.vs", "framebuffers-screen.fs");
+  shader = gpu::Shader("framebuffers.vs", "framebuffers.fs");
+  screenShader =
+      gpu::Shader("framebuffers-screen.vs", "framebuffers-screen.fs");
 
   shader.use();
   shader.setInt("texture0", 0);

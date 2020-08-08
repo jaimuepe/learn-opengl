@@ -4,7 +4,7 @@
 
 #include "gpuobject.h"
 #include "renderbuffer.h"
-#include "texture2d.h"
+#include "texture.h"
 
 #include <glad/glad.h>
 
@@ -13,51 +13,82 @@
 
 namespace gpu {
 
+namespace {
+constexpr int MAX_COLOR_ATTACHMENTS = 32;
+}
+
 class Framebuffer : public GpuObject {
 
 public:
-  Framebuffer() { glCreateFramebuffers(1, &m_ID); }
+  Framebuffer() {
+    glCreateFramebuffers(1, &m_ID);
+    for (size_t i = 0; i < MAX_COLOR_ATTACHMENTS; ++i) {
+    }
+  }
 
-  inline void attachColor(const texture::Texture2D &tex,
-                          int colorAttachmentIdx) const {
+  inline void setColorAttachment(const texture::Texture &tex,
+                                 int colorAttachmentIdx) {
+    assert(colorAttachmentIdx < MAX_COLOR_ATTACHMENTS);
     glNamedFramebufferTexture(m_ID, GL_COLOR_ATTACHMENT0 + colorAttachmentIdx,
                               tex.getID(), 0);
+    m_colorAttachmentIDs[colorAttachmentIdx] = tex.getID();
   };
 
-  inline void attachColor(const Renderbuffer &rbo,
-                          int colorAttachmentIdx) const {
+  inline void setColorAttachment(const Renderbuffer &rbo,
+                                 int colorAttachmentIdx) {
+    assert(colorAttachmentIdx < MAX_COLOR_ATTACHMENTS);
     glNamedFramebufferRenderbuffer(m_ID,
                                    GL_COLOR_ATTACHMENT0 + colorAttachmentIdx,
                                    GL_RENDERBUFFER, rbo.getID());
+    m_colorAttachmentIDs[colorAttachmentIdx] = rbo.getID();
   };
 
-  inline void attachDepth(const texture::Texture2D &tex) const {
+  inline void setDepthAttachment(const texture::Texture &tex) {
     glNamedFramebufferTexture(m_ID, GL_DEPTH_ATTACHMENT, tex.getID(), 0);
+    m_depthAttachmentID = tex.getID();
   };
 
-  inline void attachDepth(const Renderbuffer &rbo) const {
+  inline void setDepthAttachment(const Renderbuffer &rbo) {
     glNamedFramebufferRenderbuffer(m_ID, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
                                    rbo.getID());
+    m_depthAttachmentID = rbo.getID();
   };
 
-  inline void attachStencil(const texture::Texture2D &tex) const {
+  inline void setStencilAttachment(const texture::Texture &tex) {
     glNamedFramebufferTexture(m_ID, GL_STENCIL_ATTACHMENT, tex.getID(), 0);
+    m_stencilAttachmentID = tex.getID();
   };
 
-  inline void attachStencil(const Renderbuffer &rbo) const {
+  inline void setStencilAttachment(const Renderbuffer &rbo) {
     glNamedFramebufferRenderbuffer(m_ID, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                                    rbo.getID());
+    m_stencilAttachmentID = rbo.getID();
   };
 
-  inline void attachDepthStencil(const texture::Texture2D &tex) const {
+  inline void setDepthStencilAttachment(const texture::Texture &tex) {
     glNamedFramebufferTexture(m_ID, GL_DEPTH_STENCIL_ATTACHMENT, tex.getID(),
                               0);
+    m_depthAttachmentID = tex.getID();
+    m_stencilAttachmentID = tex.getID();
   };
 
-  inline void attachDepthStencil(const Renderbuffer &rbo) const {
+  inline void setDepthStencilAttachment(const Renderbuffer &rbo) {
     glNamedFramebufferRenderbuffer(m_ID, GL_DEPTH_STENCIL_ATTACHMENT,
                                    GL_RENDERBUFFER, rbo.getID());
+    m_depthAttachmentID = rbo.getID();
+    m_stencilAttachmentID = rbo.getID();
   };
+
+  inline unsigned int getColorAttachmentID(int colorAttachmentIdx) const {
+    assert(colorAttachmentIdx < MAX_COLOR_ATTACHMENTS);
+    return m_colorAttachmentIDs[colorAttachmentIdx];
+  }
+  inline unsigned int getDepthAttachmentID() const {
+    return m_depthAttachmentID;
+  }
+  inline unsigned int getStencilAttachmentID() const {
+    return m_stencilAttachmentID;
+  }
 
   bool checkStatus() const {
 
@@ -118,6 +149,11 @@ public:
     glDeleteFramebuffers(1, &m_ID);
     m_ID = 0;
   }
+
+private:
+  unsigned int m_colorAttachmentIDs[MAX_COLOR_ATTACHMENTS];
+  unsigned int m_depthAttachmentID;
+  unsigned int m_stencilAttachmentID;
 };
 
 } // namespace gpu

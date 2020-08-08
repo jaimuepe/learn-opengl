@@ -251,8 +251,8 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  Shader shader("stencil-testing.vs", "stencil-testing.fs");
-  Shader singleColorShader("stencil-testing.vs", "single-color.fs");
+  gpu::Shader shader("stencil-testing.vs", "stencil-testing.fs");
+  gpu::Shader singleColorShader("stencil-testing.vs", "single-color.fs");
 
   shader.use();
   shader.setInt("texture0", 0);

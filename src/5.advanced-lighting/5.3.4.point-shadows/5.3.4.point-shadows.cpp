@@ -13,8 +13,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
 
-#include <GLFW/glfw3.h>
 #include <glad/glad.h>
+
+#include <GLFW/glfw3.h>
 
 #include <iostream>
 
@@ -69,10 +70,10 @@ FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f), aspect, 0.1f,
 
 std::vector<PointLight> pointLights;
 
-Shader lightCubeShader;
+gpu::Shader lightCubeShader;
 
 void drawLightCubes();
-void drawScene(const Shader &shader);
+void drawScene(const gpu::Shader &shader);
 
 void process_input(GLFWwindow *window);
 
@@ -213,54 +214,23 @@ int main() {
   depthTexture.setMinMagFilter(gpu::texture::Filter::NEAREST);
   depthTexture.setBorderColor(glm::vec4{1.0f, 1.0f, 1.0f, 1.0f});
 
-  depthMapFramebuffer.attachDepth(depthTexture);
+  depthMapFramebuffer.setDepthAttachment(depthTexture);
   depthMapFramebuffer.checkStatus();
 
   // omni
 
-  // gpu::Framebuffer depthMapOmniFramebuffers[MAX_POINT_LIGHTS];
+  gpu::Framebuffer depthMapOmniFramebuffers[MAX_POINT_LIGHTS];
+  for (size_t i = 0; i < MAX_POINT_LIGHTS; ++i) {
 
-  GLuint depthMapOmniFBOs[MAX_POINT_LIGHTS];
-  GLuint depthCubemaps[MAX_POINT_LIGHTS];
+    gpu::Framebuffer &framebuffer = depthMapOmniFramebuffers[i];
+    gpu::texture::Cubemap depthCubemap{SHADOW_WIDTH, SHADOW_HEIGHT,
+                                       GL_DEPTH_COMPONENT16};
 
-  {
-    for (size_t i = 0; i < MAX_POINT_LIGHTS; ++i) {
+    depthCubemap.setMinMagFilter(gpu::texture::Filter::NEAREST);
+    depthCubemap.setWrapRST(gpu::texture::Wrap::CLAMP_TO_EDGE);
 
-      GLuint depthMapOmniFBO;
-      GLuint depthCubemap;
-
-      glCreateFramebuffers(1, &depthMapOmniFBO);
-
-      glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &depthCubemap);
-      glTextureStorage2D(depthCubemap, 1, GL_DEPTH_COMPONENT16, SHADOW_WIDTH,
-                         SHADOW_HEIGHT);
-
-      glTextureParameteri(depthCubemap, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTextureParameteri(depthCubemap, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-      glTextureParameteri(depthCubemap, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-      glTextureParameteri(depthCubemap, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTextureParameteri(depthCubemap, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-      glNamedFramebufferTexture(depthMapOmniFBO, GL_DEPTH_ATTACHMENT,
-                                depthCubemap, 0);
-
-      if (glCheckNamedFramebufferStatus(depthMapOmniFBO, GL_FRAMEBUFFER) !=
-          GL_FRAMEBUFFER_COMPLETE) {
-
-        std::stringstream ss;
-        ss << "Framebuffer is not complete!";
-
-        std::string message = ss.str();
-
-        glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR,
-                             depthMapOmniFBO, GL_DEBUG_SEVERITY_MEDIUM,
-                             message.length(), message.c_str());
-      }
-
-      depthMapOmniFBOs[i] = depthMapOmniFBO;
-      depthCubemaps[i] = depthCubemap;
-    }
+    framebuffer.setDepthAttachment(depthCubemap);
+    framebuffer.checkStatus();
   }
 
   // uniform buffers
@@ -388,16 +358,16 @@ int main() {
 
   suzzane = new Model{monkeyModelPath.str()};
 
-  lightCubeShader = Shader{"light-cube.vs", "light-cube.fs"};
+  lightCubeShader = gpu::Shader{"light-cube.vs", "light-cube.fs"};
 
-  Shader lightingShader{"lit-shadows.vs", "lit-shadows.fs"};
+  gpu::Shader lightingShader{"lit-shadows.vs", "lit-shadows.fs"};
 
-  Shader shadowMappingDepthShader{"shadow-mapping-depth.vs",
-                                  "shadow-mapping-depth.fs"};
+  gpu::Shader shadowMappingDepthShader{"shadow-mapping-depth.vs",
+                                       "shadow-mapping-depth.fs"};
 
-  Shader pointShadowsDepthShader{"point-shadows-depth.vs",
-                                 "point-shadows-depth.fs",
-                                 "point-shadows-depth.gs"};
+  gpu::Shader pointShadowsDepthShader{"point-shadows-depth.vs",
+                                      "point-shadows-depth.fs",
+                                      "point-shadows-depth.gs"};
 
   lightingShader.setInt("diffuse_texture0", 0);
   lightingShader.setInt("specular_texture0", 1);
@@ -525,7 +495,8 @@ int main() {
 
       for (size_t i = 0; i < pointLights.size(); ++i) {
 
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapOmniFBOs[i]);
+        depthMapOmniFramebuffers[i].bind();
+
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -642,7 +613,8 @@ int main() {
           lightingShader.setInt(
               "pointLightShadowMaps[" + std::to_string(i) + "]", 3 + i);
 
-          glBindTextureUnit(3 + i, depthCubemaps[i]);
+          glBindTextureUnit(3 + i,
+                            depthMapOmniFramebuffers[i].getDepthAttachmentID());
         }
       }
 
@@ -708,7 +680,7 @@ void drawLightCubes() {
   glBindVertexArray(0);
 }
 
-void drawScene(const Shader &shader) {
+void drawScene(const gpu::Shader &shader) {
 
   shader.use();
 

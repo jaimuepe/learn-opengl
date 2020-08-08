@@ -327,7 +327,7 @@ int main() {
   // vsync off
   glfwSwapInterval(0);
 
-  Shader shader("blending.vs", "blending.fs");
+gpu::Shader shader("blending.vs", "blending.fs");
 
   shader.use();
   shader.setInt("texture0", 0);

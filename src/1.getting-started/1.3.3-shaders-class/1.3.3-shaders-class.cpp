@@ -93,7 +93,7 @@ int main() {
 
   glBindVertexArray(0);
 
-  Shader shader("shader.vs", "shader.fs");
+  gpu::Shader shader("shader.vs", "shader.fs");
 
   while (!glfwWindowShouldClose(window)) {
 
@@ -103,7 +103,7 @@ int main() {
     // rendering
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    
+
     shader.use();
 
     glBindVertexArray(VAO);

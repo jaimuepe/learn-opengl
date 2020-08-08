@@ -101,7 +101,7 @@ int main() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  Shader shader("shader.vs", "shader.fs", "shader.gs");
+gpu::Shader shader("shader.vs", "shader.fs", "shader.gs");
 
   std::stringstream modelPath;
   modelPath << getModelPath("backpack") << separator << "backpack.obj";

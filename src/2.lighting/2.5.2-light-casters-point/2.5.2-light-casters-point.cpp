@@ -198,8 +198,8 @@ int main() {
 
   glBindVertexArray(0);
 
-  Shader lightingShader("light-casters.vs", "light-casters.fs");
-  Shader lightCubeShader("light-cube.vs", "light-cube.fs");
+gpu::Shader lightingShader("light-casters.vs", "light-casters.fs");
+gpu::Shader lightCubeShader("light-cube.vs", "light-cube.fs");
 
   stbi_set_flip_vertically_on_load(true);
 
