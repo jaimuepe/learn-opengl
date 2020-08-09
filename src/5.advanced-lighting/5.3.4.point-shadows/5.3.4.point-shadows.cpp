@@ -8,6 +8,7 @@
 #include "renderbuffer.h"
 #include "shader.h"
 #include "texture2d.h"
+#include "uniformbuffer.h"
 #include "vertexarray.h"
 #include "vertexbuffer.h"
 
@@ -23,6 +24,8 @@
 #include <iostream>
 
 float cameraSpeed = 3.0f;
+
+float currentTime = 0.0f;
 
 float lastTime = 0.0f;
 float deltaTime = 0.0f;
@@ -51,22 +54,20 @@ float lastMouseY = static_cast<float>(HEIGHT) * 0.5f;
 Model *suzzane;
 Model *backpack;
 
-GLuint quadVBO;
-GLuint quadVAO;
+gpu::VertexArray roomVAO;
+gpu::VertexBuffer roomVBO;
 
-gpu::VertexArray *cubeVAO;
-gpu::VertexBuffer *cubeVBO;
-
-GLuint screenQuadVBO;
-GLuint screenQuadVAO;
+gpu::VertexArray cubeVAO;
+gpu::VertexBuffer cubeVBO;
 
 gpu::texture::Texture2D containerDiffTex;
 gpu::texture::Texture2D containerSpecTex;
 
 gpu::texture::Texture2D woodTex;
 
-GLuint whiteTex03;
 GLuint whiteTex10;
+
+size_t nActiveLights = 1;
 
 FlyCamera camera{glm::vec3{0.0f, 0.0f, 3.0f}, glm::radians(45.0f), aspect, 0.1f,
                  100.0f};
@@ -125,40 +126,11 @@ int main() {
 
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-  std::vector<float> cubeVertices = createCubeVertexData();
-
-  // clang-format off
-
-  float planeVertices[] = {
-      // vposition            // normals           // texcoords
-      -25.0f, 0.0f, -25.0f,   0.0f, 1.0f, 0.0f,    0.0f, 25.0f, // top-left
-      -25.0f, 0.0f,  25.0f,   0.0f, 1.0f, 0.0f,    0.0f,  0.0f, // bottom left
-       25.0f, 0.0f, -25.0f,   0.0f, 1.0f, 0.0f,   25.0f, 25.0f, // top-right
-
-       25.0f, 0.0f, -25.0f,   0.0f, 1.0f, 0.0f,   25.0f, 25.0f, // top-right
-      -25.0f, 0.0f,  25.0f,   0.0f, 1.0f, 0.0f,    0.0f,  0.0f, // bottom-left
-       25.0f, 0.0f,  25.0f,   0.0f, 1.0f, 0.0f,   25.0f,  0.0f  // bottom-right
-  };
-
-  float screenQuadVertices[] = {
-
-      // pos(x, y)  // texcoords
-      -1.0f,  1.0f, 0.0f, 1.0f,
-      -1.0f, -1.0f, 0.0f, 0.0f,
-       1.0f, -1.0f, 1.0f, 0.0f,
-
-       1.0f, -1.0f, 1.0f, 0.0f,
-       1.0f,  1.0f, 1.0f, 1.0f,
-      -1.0f,  1.0f, 0.0f, 1.0f
-  };
-
-  // clang-format on
-
   // shadow mapping
 
   // directional
 
-  gpu::Framebuffer depthMapFramebuffer;
+  gpu::framebuffer::Framebuffer depthMapFramebuffer;
   gpu::texture::Texture2D depthTexture{SHADOW_WIDTH, SHADOW_HEIGHT,
                                        GL_DEPTH_COMPONENT16};
 
@@ -171,10 +143,10 @@ int main() {
 
   // omni
 
-  gpu::Framebuffer depthMapOmniFramebuffers[MAX_POINT_LIGHTS];
+  gpu::framebuffer::Framebuffer depthMapOmniFramebuffers[MAX_POINT_LIGHTS];
   for (size_t i = 0; i < MAX_POINT_LIGHTS; ++i) {
 
-    gpu::Framebuffer &framebuffer = depthMapOmniFramebuffers[i];
+    auto &framebuffer = depthMapOmniFramebuffers[i];
     gpu::texture::Cubemap depthCubemap{SHADOW_WIDTH, SHADOW_HEIGHT,
                                        GL_DEPTH_COMPONENT16};
 
@@ -187,96 +159,67 @@ int main() {
 
   // uniform buffers
 
-  GLuint camUbo;
-  {
-    // camera position, view matrix, perspective matrix
-    glCreateBuffers(1, &camUbo);
-    glNamedBufferData(camUbo, sizeof(glm::vec4) + 2 * sizeof(glm::mat4),
-                      nullptr, GL_STATIC_DRAW);
+  gpu::UniformBufferCreateInfo uboCreateInfo;
 
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, camUbo);
+  uboCreateInfo.bindingIndex = 0;
+  uboCreateInfo.nBlocks = 3;
+
+  std::string blockNames[] = {"cameraPosition", "cameraView",
+                              "cameraProjection"};
+
+  size_t blockSizes[] = {sizeof(glm::vec3), sizeof(glm::mat4),
+                         sizeof(glm::mat4)};
+
+  uboCreateInfo.pBlockNames = blockNames;
+  uboCreateInfo.pBlockSizes = blockSizes;
+
+  gpu::UniformBuffer camUniformBuffer{uboCreateInfo};
+
+  // room
+  MeshCreateInfo roomVertexDataCreateInfo;
+  roomVertexDataCreateInfo.insideOut = true;
+
+  std::vector<float> roomVertices =
+      createCubeVertexData(roomVertexDataCreateInfo);
+
+  roomVBO = gpu::VertexBuffer{roomVertices};
+
+  gpu::VertexArrayBufferBindInfo roomBindInfo;
+  {
+    roomBindInfo.pVertexBuffer = &roomVBO;
+    roomBindInfo.nBindings = 3;
+
+    size_t indices[] = {0, 1, 2};
+    size_t valuesPerVertex[] = {3, 3, 2};
+
+    roomBindInfo.pBindIndices = indices;
+    roomBindInfo.pValuesPerVertex = valuesPerVertex;
+    roomVAO.bindBuffer(roomBindInfo);
   }
 
-  cubeVAO = new gpu::VertexArray{};
-  cubeVBO = new gpu::VertexBuffer{cubeVertices};
+  // cubes
+
+  std::vector<float> cubeVertices = createCubeVertexData();
+
+  cubeVBO = gpu::VertexBuffer{cubeVertices};
 
   gpu::VertexArrayBufferBindInfo cubeBindInfo;
-
-  cubeBindInfo.pVertexBuffer = cubeVBO;
-  cubeBindInfo.nBindings = 3;
-
-  size_t indices[] = {0, 1, 2};
-  size_t valuesPerVertex[] = {3, 3, 2};
-
-  cubeBindInfo.pBindIndices = indices;
-  cubeBindInfo.pValuesPerVertex = valuesPerVertex;
-
-  cubeVAO->bindBuffer(cubeBindInfo);
-
-  // quad
   {
-    glCreateBuffers(1, &quadVBO);
-    glNamedBufferData(quadVBO, sizeof(planeVertices), planeVertices,
-                      GL_STATIC_DRAW);
+    cubeBindInfo.pVertexBuffer = &cubeVBO;
+    cubeBindInfo.nBindings = 3;
 
-    glCreateVertexArrays(1, &quadVAO);
+    size_t indices[] = {0, 1, 2};
+    size_t valuesPerVertex[] = {3, 3, 2};
 
-    // positions
-    glEnableVertexArrayAttrib(quadVAO, 0);
-    glVertexArrayAttribFormat(quadVAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayVertexBuffer(quadVAO, 0, quadVBO, 0, 8 * sizeof(float));
-    glVertexArrayAttribBinding(quadVAO, 0, 0);
-
-    // normals
-    glEnableVertexArrayAttrib(quadVAO, 1);
-    glVertexArrayAttribFormat(quadVAO, 1, 3, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayVertexBuffer(quadVAO, 1, quadVBO, 3 * sizeof(float),
-                              8 * sizeof(float));
-    glVertexArrayAttribBinding(quadVAO, 1, 1);
-
-    // texcoords
-    glEnableVertexArrayAttrib(quadVAO, 2);
-    glVertexArrayAttribFormat(quadVAO, 2, 2, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayVertexBuffer(quadVAO, 2, quadVBO, 6 * sizeof(float),
-                              8 * sizeof(float));
-    glVertexArrayAttribBinding(quadVAO, 2, 2);
-  }
-
-  // screen quad
-  {
-    glCreateBuffers(1, &screenQuadVBO);
-    glNamedBufferData(screenQuadVBO, sizeof(screenQuadVertices),
-                      screenQuadVertices, GL_STATIC_DRAW);
-
-    glCreateVertexArrays(1, &screenQuadVAO);
-
-    // positions
-    glEnableVertexArrayAttrib(screenQuadVAO, 0);
-    glVertexArrayAttribFormat(screenQuadVAO, 0, 2, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayVertexBuffer(screenQuadVAO, 0, screenQuadVBO, 0,
-                              4 * sizeof(float));
-    glVertexArrayAttribBinding(screenQuadVAO, 0, 0);
-
-    // texcoords
-    glEnableVertexArrayAttrib(screenQuadVAO, 1);
-    glVertexArrayAttribFormat(screenQuadVAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayVertexBuffer(screenQuadVAO, 1, screenQuadVBO,
-                              2 * sizeof(float), 4 * sizeof(float));
-    glVertexArrayAttribBinding(screenQuadVAO, 1, 1);
+    cubeBindInfo.pBindIndices = indices;
+    cubeBindInfo.pValuesPerVertex = valuesPerVertex;
+    cubeVAO.bindBuffer(cubeBindInfo);
   }
 
   containerDiffTex = gpu::texture::Texture2D{"container2.png"};
   containerSpecTex = gpu::texture::Texture2D{"container2_specular.png"};
 
   woodTex = gpu::texture::Texture2D{"wood.png"};
-
-  glCreateTextures(GL_TEXTURE_2D, 1, &whiteTex03);
-  // 1px x 1px, single color texture (useful for default values)
-  {
-    float data[] = {0.3f, 0.3f, 0.3f};
-    glTextureStorage2D(whiteTex03, 1, GL_RGB8, 1, 1);
-    glTextureSubImage2D(whiteTex03, 0, 0, 0, 1, 1, GL_RGB, GL_FLOAT, &data);
-  }
 
   glCreateTextures(GL_TEXTURE_2D, 1, &whiteTex10);
   // 1px x 1px, single color texture (useful for default values)
@@ -315,34 +258,33 @@ int main() {
   {
     {
       PointLight light;
-      // light.position = glm::vec3{0.0f, 3.0f, 0.0f};
-      light.position = glm::vec3{-1.0f, 3.0f, -1.0f};
-      light.ambient = glm::vec3{0.0f};
-      light.diffuse = glm::vec3{0.3f, 0.0f, 0.0f};
+      light.position = glm::vec3{-1.3f, 0.1f, -1.7f};
+      light.ambient = glm::vec3{0.01f};
+      light.diffuse = glm::vec3{0.2, 0.2, 0.2};
       light.specular = glm::vec3{0.3f, 0.3f, 0.3f};
       pointLights.push_back(light);
     }
     {
       PointLight light;
-      light.position = glm::vec3{-1.0f, 3.0f, 1.0f};
-      light.ambient = glm::vec3{0.0f};
-      light.diffuse = glm::vec3{0.1f, 0.1f, 0.1f};
+      light.position = glm::vec3{-1.8f, -0.5f, 1.7f};
+      light.ambient = glm::vec3{0.01f};
+      light.diffuse = glm::vec3{0.2, 0.2, 0.2};
       light.specular = glm::vec3{0.3f, 0.3f, 0.3f};
       pointLights.push_back(light);
     }
     {
       PointLight light;
-      light.position = glm::vec3{1.0f, 3.0f, -1.0f};
-      light.ambient = glm::vec3{0.0f};
-      light.diffuse = glm::vec3{0.1f, 0.1f, 0.1f};
+      light.position = glm::vec3{1.4f, -0.3f, -1.9f};
+      light.ambient = glm::vec3{0.01f};
+      light.diffuse = glm::vec3{0.2, 0.2, 0.2};
       light.specular = glm::vec3{0.3f, 0.3f, 0.3f};
       pointLights.push_back(light);
     }
     {
       PointLight light;
-      light.position = glm::vec3{1.0f, 3.0f, 1.0f};
-      light.ambient = glm::vec3{0.0f};
-      light.diffuse = glm::vec3{0.1f, 0.1f, 0.1f};
+      light.position = glm::vec3{1.7f, 0.3f, 1.5f};
+      light.ambient = glm::vec3{0.01f};
+      light.diffuse = glm::vec3{0.2, 0.2, 0.2};
       light.specular = glm::vec3{0.3f, 0.3f, 0.3f};
       pointLights.push_back(light);
     }
@@ -358,11 +300,21 @@ int main() {
 
   glm::vec3 lightDir = glm::vec3{0.2f, -0.4f, 0.1f};
 
-  lightingShader.setVec3("dirLight.ambient", 0.02f, 0.02f, 0.02f);
-  lightingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
-  lightingShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
+  /*
+    lightingShader.setVec3("dirLight.ambient", 0.02f, 0.02f, 0.02f);
+    lightingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
+    lightingShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
+  */
+
+  lightingShader.setVec3("dirLight.ambient", 0.0f, 0.0f, 0.0f);
+  lightingShader.setVec3("dirLight.diffuse", 0.0f, 0.0f, 0.0f);
+  lightingShader.setVec3("dirLight.specular", 0.0f, 0.0f, 0.0f);
+
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
 
   // if the directional light is going to be static we only need to do this once
+  // (baked shadows!)
   {
     glm::vec3 lightPos = -10.0f * lightDir;
 
@@ -376,17 +328,105 @@ int main() {
 
     shadowMappingDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
     lightingShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+    depthMapFramebuffer.bind();
+
+    {
+      using namespace gpu::framebuffer;
+
+      setViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+      clear(ClearFlagBits::DEPTH_BIT);
+    }
+
+    drawScene(shadowMappingDepthShader);
   }
 
-  glEnable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
+  // same for the point lights (baked shadows!)
+  {
+    float fovy = glm::radians(90.0f);
+    float zNear = 0.1f;
+    float zFar = 25.0f;
 
-  glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    pointShadowsDepthShader.setInt("nPointLights", pointLights.size());
+
+    pointShadowsDepthShader.setFloat("zNear", zNear);
+    pointShadowsDepthShader.setFloat("zFar", zFar);
+
+    for (size_t i = 0; i < pointLights.size(); ++i) {
+
+      depthMapOmniFramebuffers[i].bind();
+
+      {
+        using namespace gpu::framebuffer;
+
+        setViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        clear(ClearFlagBits::DEPTH_BIT);
+      }
+
+      const PointLight &pointLight = pointLights[i];
+
+      glm::mat4 projection = glm::perspective(fovy, shadowAspect, zNear, zFar);
+
+      pointShadowsDepthShader.setVec3("lightPos", pointLight.position);
+
+      // right face (+x)
+      pointShadowsDepthShader.setMat4(
+          "shadowMatrices[0]",
+          projection *
+              glm::lookAt(pointLight.position,
+                          pointLight.position + glm::vec3{1.0f, 0.0f, 0.0f},
+                          glm::vec3{0.0f, -1.0f, 0.0f}));
+
+      // left face (-x)
+      pointShadowsDepthShader.setMat4(
+          "shadowMatrices[1]",
+          projection *
+              glm::lookAt(pointLight.position,
+                          pointLight.position + glm::vec3{-1.0f, 0.0f, 0.0f},
+                          glm::vec3{0.0f, -1.0f, 0.0f}));
+
+      // up face (+y)
+      pointShadowsDepthShader.setMat4(
+          "shadowMatrices[2]",
+          projection *
+              glm::lookAt(pointLight.position,
+                          pointLight.position + glm::vec3{0.0f, 1.0f, 0.0f},
+                          glm::vec3{0.0f, 0.0f, 1.0f}));
+
+      // down face (-y)
+      pointShadowsDepthShader.setMat4(
+          "shadowMatrices[3]",
+          projection *
+              glm::lookAt(pointLight.position,
+                          pointLight.position + glm::vec3{0.0f, -1.0f, 0.0f},
+                          glm::vec3{0.0f, 0.0f, -1.0f}));
+
+      // front face (+z)
+      pointShadowsDepthShader.setMat4(
+          "shadowMatrices[4]",
+          projection *
+              glm::lookAt(pointLight.position,
+                          pointLight.position + glm::vec3{0.0f, 0.0f, 1.0f},
+                          glm::vec3{0.0f, -1.0f, 0.0f}));
+
+      // back face (-z)
+      pointShadowsDepthShader.setMat4(
+          "shadowMatrices[5]",
+          projection *
+              glm::lookAt(pointLight.position,
+                          pointLight.position + glm::vec3{0.0f, 0.0f, -1.0f},
+                          glm::vec3{0.0f, -1.0f, 0.0f}));
+
+      drawScene(pointShadowsDepthShader);
+    }
+  }
+
+  gpu::framebuffer::setClearColor(0.1f, 0.1f, 0.1f);
 
   while (!glfwWindowShouldClose(window)) {
 
-    float timeSinceStart = static_cast<float>(glfwGetTime());
-    deltaTime = timeSinceStart - lastTime;
+    currentTime = static_cast<float>(glfwGetTime());
+    deltaTime = currentTime - lastTime;
 
     fpsCounterTime += deltaTime;
 
@@ -405,120 +445,30 @@ int main() {
       fpsCounterTime = 0.0f;
     }
 
-    lastTime = timeSinceStart;
+    lastTime = currentTime;
 
     // input
     process_input(window);
 
-    // first pass
-    // calculate depth from the light's perspective
+    pointShadowsDepthShader.setInt("nPointLights", nActiveLights);
+
+    // draw scene normally (with shadow info from the baked pass)
     {
+      {
+        using namespace gpu::framebuffer;
 
-      // dir light
+        bindDefault();
 
-      depthMapFramebuffer.bind();
-
-      glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-      glClear(GL_DEPTH_BUFFER_BIT);
-
-      drawScene(shadowMappingDepthShader);
-
-      // point lights
-
-      float fovy = glm::radians(90.0f);
-      float zNear = 0.1f;
-      float zFar = 25.0f;
-
-      for (size_t i = 0; i < pointLights.size(); ++i) {
-
-        depthMapOmniFramebuffers[i].bind();
-
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glClear(GL_DEPTH_BUFFER_BIT);
-
-        const PointLight &pointLight = pointLights[i];
-
-        glm::mat4 projection =
-            glm::perspective(fovy, shadowAspect, zNear, zFar);
-
-        pointShadowsDepthShader.setVec3("lightPos", pointLight.position);
-        pointShadowsDepthShader.setFloat("zNear", zNear);
-        pointShadowsDepthShader.setFloat("zFar", zFar);
-
-        // right face (+x)
-        pointShadowsDepthShader.setMat4(
-            "shadowMatrices[0]",
-            projection *
-                glm::lookAt(pointLight.position,
-                            pointLight.position + glm::vec3{1.0f, 0.0f, 0.0f},
-                            glm::vec3{0.0f, -1.0f, 0.0f}));
-
-        // left face (-x)
-        pointShadowsDepthShader.setMat4(
-            "shadowMatrices[1]",
-            projection *
-                glm::lookAt(pointLight.position,
-                            pointLight.position + glm::vec3{-1.0f, 0.0f, 0.0f},
-                            glm::vec3{0.0f, -1.0f, 0.0f}));
-
-        // up face (+y)
-        pointShadowsDepthShader.setMat4(
-            "shadowMatrices[2]",
-            projection *
-                glm::lookAt(pointLight.position,
-                            pointLight.position + glm::vec3{0.0f, 1.0f, 0.0f},
-                            glm::vec3{0.0f, 0.0f, 1.0f}));
-
-        // down face (-y)
-        pointShadowsDepthShader.setMat4(
-            "shadowMatrices[3]",
-            projection *
-                glm::lookAt(pointLight.position,
-                            pointLight.position + glm::vec3{0.0f, -1.0f, 0.0f},
-                            glm::vec3{0.0f, 0.0f, -1.0f}));
-
-        // front face (+z)
-        pointShadowsDepthShader.setMat4(
-            "shadowMatrices[4]",
-            projection *
-                glm::lookAt(pointLight.position,
-                            pointLight.position + glm::vec3{0.0f, 0.0f, 1.0f},
-                            glm::vec3{0.0f, -1.0f, 0.0f}));
-
-        // back face (-z)
-        pointShadowsDepthShader.setMat4(
-            "shadowMatrices[5]",
-            projection *
-                glm::lookAt(pointLight.position,
-                            pointLight.position + glm::vec3{0.0f, 0.0f, -1.0f},
-                            glm::vec3{0.0f, -1.0f, 0.0f}));
-
-        drawScene(pointShadowsDepthShader);
+        setViewport(0, 0, WIDTH, HEIGHT);
+        clear(ClearFlagBits::COLOR_BIT | ClearFlagBits::DEPTH_BIT);
       }
-    }
-
-    // second pass
-    // draw scene normally (with shadow info from the previous pass)
-    {
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-      glViewport(0, 0, WIDTH, HEIGHT);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      const glm::mat4 &view = camera.getViewMatrix();
-      const glm::mat4 &projection = camera.getProjectionMatrix();
 
       // uniform buffers
       {
-        // camera pos
-        glNamedBufferSubData(camUbo, 0, sizeof(glm::vec4),
-                             glm::value_ptr(camera.getPosition()));
-        // camera view
-        glNamedBufferSubData(camUbo, sizeof(glm::vec4), sizeof(glm::mat4),
-                             glm::value_ptr(view));
-        // camera projection
-        glNamedBufferSubData(camUbo, sizeof(glm::vec4) + sizeof(glm::mat4),
-                             sizeof(glm::mat4), glm::value_ptr(projection));
+        camUniformBuffer.updateSubdata("cameraPosition", camera.getPosition());
+        camUniformBuffer.updateSubdata("cameraView", camera.getViewMatrix());
+        camUniformBuffer.updateSubdata("cameraProjection",
+                                       camera.getProjectionMatrix());
       }
 
       // dir light
@@ -526,9 +476,9 @@ int main() {
 
       // point lights
       {
-        lightingShader.setInt("nPointLights", pointLights.size());
+        lightingShader.setInt("nPointLights", nActiveLights);
 
-        for (size_t i = 0; i < pointLights.size(); ++i) {
+        for (size_t i = 0; i < nActiveLights; ++i) {
 
           const PointLight &point = pointLights[i];
           std::string prefix = "pointLights[" + std::to_string(i) + "]";
@@ -572,20 +522,16 @@ int main() {
 
   depthMapFramebuffer.destroy();
 
-  glDeleteVertexArrays(1, &quadVAO);
-  cubeVAO->destroy();
+  cubeVAO.destroy();
+  cubeVBO.destroy();
 
-  glDeleteBuffers(1, &quadVBO);
-  cubeVBO->destroy();
-
-  glDeleteBuffers(1, &camUbo);
+  camUniformBuffer.destroy();
 
   lightingShader.destroy();
 
   containerDiffTex.destroy();
   containerSpecTex.destroy();
 
-  glDeleteTextures(1, &whiteTex03);
   glDeleteTextures(1, &whiteTex10);
 
   glfwTerminate();
@@ -595,11 +541,11 @@ int main() {
 
 void drawLightCubes() {
 
-  cubeVAO->bind();
+  cubeVAO.bind();
 
   lightCubeShader.use();
 
-  for (size_t i = 0; i < pointLights.size(); ++i) {
+  for (size_t i = 0; i < nActiveLights; ++i) {
 
     glm::mat4 model{1.0f};
     model = glm::translate(model, pointLights[i].position);
@@ -620,19 +566,19 @@ void drawScene(const gpu::Shader &shader) {
 
   shader.use();
 
-  // floor
+  // room
   {
-    glBindTextureUnit(0, woodTex.getID());
-    glBindTextureUnit(1, whiteTex03);
+    roomVAO.bind();
 
-    glBindVertexArray(quadVAO);
+    glBindTextureUnit(0, woodTex.getID());
+    glBindTextureUnit(1, 0);
 
     glm::mat4 model{1.0f};
-    model = glm::translate(model, glm::vec3{0.0f, -0.5f, 0.0f});
+    model = glm::scale(model, glm::vec3{8.0f});
 
     shader.setMat4("model", model);
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
   }
 
   // cubes
@@ -640,7 +586,7 @@ void drawScene(const gpu::Shader &shader) {
     glBindTextureUnit(0, containerDiffTex.getID());
     glBindTextureUnit(1, containerSpecTex.getID());
 
-    cubeVAO->bind();
+    cubeVAO.bind();
 
     // 1
     glm::mat4 model{1.0f};
@@ -652,6 +598,8 @@ void drawScene(const gpu::Shader &shader) {
     // 2
     model = glm::mat4{1.0f};
     model = glm::translate(model, glm::vec3{2.0f, -0.25f, 1.0});
+    model = glm::rotate(model, glm::radians(35.0f),
+                        glm::normalize(glm::vec3{0.0, 1.0, 1.0}));
     model = glm::scale(model, glm::vec3{0.5f});
 
     shader.setMat4("model", model);
@@ -675,11 +623,8 @@ void drawScene(const gpu::Shader &shader) {
 
     glm::mat4 model = glm::mat4{1.0f};
 
-    model = glm::translate(model, glm::vec3{-2.0f, 1.0f, -2.0f});
-    model =
-        glm::rotate(model, -glm::radians(90.0f), glm::vec3{0.0f, 1.0f, 0.0f});
-    model =
-        glm::rotate(model, -glm::radians(15.0f), glm::vec3{1.0f, 0.0f, 0.0f});
+    model = glm::rotate(model, glm::radians(15.0f * currentTime),
+                        glm::vec3{0.3f, 0.4f, 0.0f});
 
     shader.setMat4("model", model);
     suzzane->draw(shader);
@@ -703,6 +648,16 @@ void drawScene(const gpu::Shader &shader) {
 void process_input(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+    nActiveLights = 1;
+  } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+    nActiveLights = 2;
+  } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+    nActiveLights = 3;
+  } else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+    nActiveLights = 4;
   }
 
   int front = 0;

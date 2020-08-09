@@ -42,11 +42,13 @@ class Texture : public GpuObject {
 
 public:
   inline void setWrapS(Wrap wrapMode) {
-    glTextureParameteri(m_ID, GL_TEXTURE_WRAP_S, mapToGLWrap(wrapMode, m_ID));
+    glTextureParameteri(m_ID, GL_TEXTURE_WRAP_S,
+                        static_cast<unsigned int>(wrapMode));
   }
 
   inline void setWrapT(Wrap wrapMode) {
-    glTextureParameteri(m_ID, GL_TEXTURE_WRAP_T, mapToGLWrap(wrapMode, m_ID));
+    glTextureParameteri(m_ID, GL_TEXTURE_WRAP_T,
+                        static_cast<unsigned int>(wrapMode));
   }
 
   inline void setWrapST(Wrap wrap) {
@@ -56,12 +58,12 @@ public:
 
   inline void setMinFilter(Filter filter) {
     glTextureParameteri(m_ID, GL_TEXTURE_MIN_FILTER,
-                        mapToGLFilter(filter, m_ID));
+                        static_cast<unsigned int>(filter));
   }
 
   inline void setMagFilter(Filter filter) {
     glTextureParameteri(m_ID, GL_TEXTURE_MAG_FILTER,
-                        mapToGLFilter(filter, m_ID));
+                        static_cast<unsigned int>(filter));
   }
 
   inline void setMinMagFilter(Filter filter) {

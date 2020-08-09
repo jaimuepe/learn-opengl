@@ -109,7 +109,6 @@ float calculateDirLightShadow(vec3 normal) {
   // return currentDepth - bias > closestDepth ? 1.0 : 0.0;
 }
 
-// normal in view-space!
 vec3 calculateDirLight(vec3 normal, vec3 diffuseColor, vec3 specularColor) {
 
   vec3 fragLightDir = -normalize(dirLight.direction);
@@ -206,14 +205,4 @@ void main() {
   }
 
   FragColor = vec4(result, 1.0);
-
-  return;
-  vec3 lightToFrag = fs_in.fragPos - pointLights[0].position;
-  float lightToFragLength = length(lightToFrag);
-
-  // normalized [0, 1]
-  float currentDepth =
-      lightToFragLength / (pointLights[0].zFar - pointLights[0].zNear);
-
-  FragColor = vec4(vec3(currentDepth), 1.0);
 }

@@ -20,6 +20,7 @@ namespace gpu {
 class Shader : public GpuObject {
 
 public:
+
   Shader(){};
 
   Shader(const std::string &vertexFile, const std::string &fragmentFile,

@@ -61,7 +61,8 @@ public:
   }
 
   inline void setWrapR(Wrap wrapMode) {
-    glTextureParameteri(m_ID, GL_TEXTURE_WRAP_R, mapToGLWrap(wrapMode, m_ID));
+    glTextureParameteri(m_ID, GL_TEXTURE_WRAP_R,
+                        static_cast<unsigned int>(wrapMode));
   }
 
   inline void setWrapRST(Wrap wrap) {

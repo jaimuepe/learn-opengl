@@ -4,6 +4,11 @@
 
 namespace gpu {
 
+#define GPU_OBJECT_CREATE_LAZY(glFunction)                                     \
+  if (m_ID == 0) {                                                             \
+    glFunction(1, &m_ID);                                                      \
+  }
+
 class GpuObject {
 
 public:

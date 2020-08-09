@@ -2,6 +2,7 @@
 #ifndef GPU_FRAMEBUFFER_H
 #define GPU_FRAMEBUFFER_H
 
+#include "gpuconstants.h"
 #include "gpuobject.h"
 #include "renderbuffer.h"
 #include "texture.h"
@@ -17,18 +18,20 @@ namespace {
 constexpr int MAX_COLOR_ATTACHMENTS = 32;
 }
 
+namespace framebuffer {
+
 class Framebuffer : public GpuObject {
 
 public:
-  Framebuffer() {
-    glCreateFramebuffers(1, &m_ID);
-    for (size_t i = 0; i < MAX_COLOR_ATTACHMENTS; ++i) {
-    }
-  }
+  Framebuffer() {}
 
   inline void setColorAttachment(const texture::Texture &tex,
                                  int colorAttachmentIdx) {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
+
     assert(colorAttachmentIdx < MAX_COLOR_ATTACHMENTS);
+
     glNamedFramebufferTexture(m_ID, GL_COLOR_ATTACHMENT0 + colorAttachmentIdx,
                               tex.getID(), 0);
     m_colorAttachmentIDs[colorAttachmentIdx] = tex.getID();
@@ -36,6 +39,9 @@ public:
 
   inline void setColorAttachment(const Renderbuffer &rbo,
                                  int colorAttachmentIdx) {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
+
     assert(colorAttachmentIdx < MAX_COLOR_ATTACHMENTS);
     glNamedFramebufferRenderbuffer(m_ID,
                                    GL_COLOR_ATTACHMENT0 + colorAttachmentIdx,
@@ -44,28 +50,43 @@ public:
   };
 
   inline void setDepthAttachment(const texture::Texture &tex) {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
+
     glNamedFramebufferTexture(m_ID, GL_DEPTH_ATTACHMENT, tex.getID(), 0);
     m_depthAttachmentID = tex.getID();
   };
 
   inline void setDepthAttachment(const Renderbuffer &rbo) {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
+
     glNamedFramebufferRenderbuffer(m_ID, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
                                    rbo.getID());
     m_depthAttachmentID = rbo.getID();
   };
 
   inline void setStencilAttachment(const texture::Texture &tex) {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
+
     glNamedFramebufferTexture(m_ID, GL_STENCIL_ATTACHMENT, tex.getID(), 0);
     m_stencilAttachmentID = tex.getID();
   };
 
   inline void setStencilAttachment(const Renderbuffer &rbo) {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
+
     glNamedFramebufferRenderbuffer(m_ID, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                                    rbo.getID());
     m_stencilAttachmentID = rbo.getID();
   };
 
   inline void setDepthStencilAttachment(const texture::Texture &tex) {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
+
     glNamedFramebufferTexture(m_ID, GL_DEPTH_STENCIL_ATTACHMENT, tex.getID(),
                               0);
     m_depthAttachmentID = tex.getID();
@@ -73,6 +94,9 @@ public:
   };
 
   inline void setDepthStencilAttachment(const Renderbuffer &rbo) {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
+
     glNamedFramebufferRenderbuffer(m_ID, GL_DEPTH_STENCIL_ATTACHMENT,
                                    GL_RENDERBUFFER, rbo.getID());
     m_depthAttachmentID = rbo.getID();
@@ -83,6 +107,7 @@ public:
     assert(colorAttachmentIdx < MAX_COLOR_ATTACHMENTS);
     return m_colorAttachmentIDs[colorAttachmentIdx];
   }
+
   inline unsigned int getDepthAttachmentID() const {
     return m_depthAttachmentID;
   }
@@ -90,7 +115,9 @@ public:
     return m_stencilAttachmentID;
   }
 
-  bool checkStatus() const {
+  bool checkStatus() {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
 
     GLuint status = glCheckNamedFramebufferStatus(m_ID, GL_FRAMEBUFFER);
 
@@ -143,7 +170,10 @@ public:
     return true;
   }
 
-  inline void bind() const { glBindFramebuffer(GL_FRAMEBUFFER, m_ID); }
+  inline void bind() {
+    GPU_OBJECT_CREATE_LAZY(glCreateFramebuffers)
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ID);
+  }
 
   virtual void destroy() override {
     glDeleteFramebuffers(1, &m_ID);
@@ -155,6 +185,22 @@ private:
   unsigned int m_depthAttachmentID;
   unsigned int m_stencilAttachmentID;
 };
+
+inline void bindDefault() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+
+inline void setViewport(size_t x, size_t y, size_t width, size_t height) {
+  glViewport(x, y, width, height);
+}
+
+inline void setClearColor(float r, float g, float b, float a = 1.0f) {
+  glClearColor(r, g, b, a);
+}
+
+inline void clear(ClearFlagBits flagBits) {
+  glClear(static_cast<unsigned int>(flagBits));
+}
+
+} // namespace framebuffer
 
 } // namespace gpu
 

@@ -22,9 +22,11 @@ struct VertexArrayBufferBindInfo {
 class VertexArray : public GpuObject {
 
 public:
-  VertexArray() { glCreateVertexArrays(1, &m_ID); }
+  VertexArray() {}
 
   void bindBuffer(const VertexArrayBufferBindInfo &bindInfo) {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateVertexArrays)
 
     GLuint vertexBufferID = bindInfo.pVertexBuffer->getID();
 
@@ -54,7 +56,12 @@ public:
     }
   }
 
-  inline void bind() const { glBindVertexArray(m_ID); }
+  inline void bind() {
+
+    GPU_OBJECT_CREATE_LAZY(glCreateVertexArrays)
+
+    glBindVertexArray(m_ID);
+  }
 
   virtual void destroy() override {
     glDeleteVertexArrays(1, &m_ID);
