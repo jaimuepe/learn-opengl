@@ -342,84 +342,6 @@ int main() {
   }
 
   // same for the point lights (baked shadows!)
-  {
-    float fovy = glm::radians(90.0f);
-    float zNear = 0.1f;
-    float zFar = 25.0f;
-
-    pointShadowsDepthShader.setInt("nPointLights", pointLights.size());
-
-    pointShadowsDepthShader.setFloat("zNear", zNear);
-    pointShadowsDepthShader.setFloat("zFar", zFar);
-
-    for (size_t i = 0; i < pointLights.size(); ++i) {
-
-      depthMapOmniFramebuffers[i].bind();
-
-      {
-        using namespace gpu::framebuffer;
-
-        setViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        clear(ClearFlagBits::DEPTH_BIT);
-      }
-
-      const PointLight &pointLight = pointLights[i];
-
-      glm::mat4 projection = glm::perspective(fovy, shadowAspect, zNear, zFar);
-
-      pointShadowsDepthShader.setVec3("lightPos", pointLight.position);
-
-      // right face (+x)
-      pointShadowsDepthShader.setMat4(
-          "shadowMatrices[0]",
-          projection *
-              glm::lookAt(pointLight.position,
-                          pointLight.position + glm::vec3{1.0f, 0.0f, 0.0f},
-                          glm::vec3{0.0f, -1.0f, 0.0f}));
-
-      // left face (-x)
-      pointShadowsDepthShader.setMat4(
-          "shadowMatrices[1]",
-          projection *
-              glm::lookAt(pointLight.position,
-                          pointLight.position + glm::vec3{-1.0f, 0.0f, 0.0f},
-                          glm::vec3{0.0f, -1.0f, 0.0f}));
-
-      // up face (+y)
-      pointShadowsDepthShader.setMat4(
-          "shadowMatrices[2]",
-          projection *
-              glm::lookAt(pointLight.position,
-                          pointLight.position + glm::vec3{0.0f, 1.0f, 0.0f},
-                          glm::vec3{0.0f, 0.0f, 1.0f}));
-
-      // down face (-y)
-      pointShadowsDepthShader.setMat4(
-          "shadowMatrices[3]",
-          projection *
-              glm::lookAt(pointLight.position,
-                          pointLight.position + glm::vec3{0.0f, -1.0f, 0.0f},
-                          glm::vec3{0.0f, 0.0f, -1.0f}));
-
-      // front face (+z)
-      pointShadowsDepthShader.setMat4(
-          "shadowMatrices[4]",
-          projection *
-              glm::lookAt(pointLight.position,
-                          pointLight.position + glm::vec3{0.0f, 0.0f, 1.0f},
-                          glm::vec3{0.0f, -1.0f, 0.0f}));
-
-      // back face (-z)
-      pointShadowsDepthShader.setMat4(
-          "shadowMatrices[5]",
-          projection *
-              glm::lookAt(pointLight.position,
-                          pointLight.position + glm::vec3{0.0f, 0.0f, -1.0f},
-                          glm::vec3{0.0f, -1.0f, 0.0f}));
-
-      drawScene(pointShadowsDepthShader);
-    }
-  }
 
   gpu::framebuffer::setClearColor(0.1f, 0.1f, 0.1f);
 
@@ -451,6 +373,87 @@ int main() {
     process_input(window);
 
     pointShadowsDepthShader.setInt("nPointLights", nActiveLights);
+
+    // first pass - generate shadows
+    {
+      float fovy = glm::radians(90.0f);
+      float zNear = 0.1f;
+      float zFar = 25.0f;
+
+      pointShadowsDepthShader.setInt("nPointLights", nActiveLights);
+
+      pointShadowsDepthShader.setFloat("zNear", zNear);
+      pointShadowsDepthShader.setFloat("zFar", zFar);
+
+      for (size_t i = 0; i < nActiveLights; ++i) {
+
+        depthMapOmniFramebuffers[i].bind();
+
+        {
+          using namespace gpu::framebuffer;
+
+          setViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+          clear(ClearFlagBits::DEPTH_BIT);
+        }
+
+        const PointLight &pointLight = pointLights[i];
+
+        glm::mat4 projection =
+            glm::perspective(fovy, shadowAspect, zNear, zFar);
+
+        pointShadowsDepthShader.setVec3("lightPos", pointLight.position);
+
+        // right face (+x)
+        pointShadowsDepthShader.setMat4(
+            "shadowMatrices[0]",
+            projection *
+                glm::lookAt(pointLight.position,
+                            pointLight.position + glm::vec3{1.0f, 0.0f, 0.0f},
+                            glm::vec3{0.0f, -1.0f, 0.0f}));
+
+        // left face (-x)
+        pointShadowsDepthShader.setMat4(
+            "shadowMatrices[1]",
+            projection *
+                glm::lookAt(pointLight.position,
+                            pointLight.position + glm::vec3{-1.0f, 0.0f, 0.0f},
+                            glm::vec3{0.0f, -1.0f, 0.0f}));
+
+        // up face (+y)
+        pointShadowsDepthShader.setMat4(
+            "shadowMatrices[2]",
+            projection *
+                glm::lookAt(pointLight.position,
+                            pointLight.position + glm::vec3{0.0f, 1.0f, 0.0f},
+                            glm::vec3{0.0f, 0.0f, 1.0f}));
+
+        // down face (-y)
+        pointShadowsDepthShader.setMat4(
+            "shadowMatrices[3]",
+            projection *
+                glm::lookAt(pointLight.position,
+                            pointLight.position + glm::vec3{0.0f, -1.0f, 0.0f},
+                            glm::vec3{0.0f, 0.0f, -1.0f}));
+
+        // front face (+z)
+        pointShadowsDepthShader.setMat4(
+            "shadowMatrices[4]",
+            projection *
+                glm::lookAt(pointLight.position,
+                            pointLight.position + glm::vec3{0.0f, 0.0f, 1.0f},
+                            glm::vec3{0.0f, -1.0f, 0.0f}));
+
+        // back face (-z)
+        pointShadowsDepthShader.setMat4(
+            "shadowMatrices[5]",
+            projection *
+                glm::lookAt(pointLight.position,
+                            pointLight.position + glm::vec3{0.0f, 0.0f, -1.0f},
+                            glm::vec3{0.0f, -1.0f, 0.0f}));
+
+        drawScene(pointShadowsDepthShader);
+      }
+    }
 
     // draw scene normally (with shadow info from the baked pass)
     {
