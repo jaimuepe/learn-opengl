@@ -142,7 +142,8 @@ set("5.advanced-lighting"
     "5.3.2.shadow-mapping-base"
     "5.3.3.shadow-mapping"
     "5.3.4.point-shadows"
-    "5.3.5.point-shadows-soft")
+    "5.3.5.point-shadows-soft"
+    "5.4.1.normal-mapping")
 
 include_directories(
     dependencies/assimp/include

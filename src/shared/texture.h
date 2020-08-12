@@ -84,7 +84,7 @@ public:
   }
 
 protected:
-  Texture() {}
+  Texture() : m_width(0), m_height(0), m_format(0), m_internalFormat(0) {}
 
   UniqueTextureData loadTexture(const std::string &path, bool flipY) {
 
@@ -136,7 +136,37 @@ protected:
 
     return texData;
   }
+
+  size_t m_width;
+  size_t m_height;
+  GLuint m_format;
+  GLuint m_internalFormat;
 };
+
+GLuint internalFormatFromFormat(GLuint format) {
+
+  switch (format) {
+  case GL_RGB:
+    return GL_RGB8;
+  case GL_RGBA:
+    return GL_RGBA8;
+  case GL_R:
+    return GL_R8;
+  default:
+
+    std::stringstream ss;
+    ss << "texture::internalFormatFromFormat\n";
+    ss << "Unhandled format: " << format;
+
+    std::string message = ss.str();
+
+    glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 0,
+                         GL_DEBUG_SEVERITY_MEDIUM, message.length(),
+                         message.c_str());
+
+    return 0;
+  }
+}
 
 } // namespace texture
 

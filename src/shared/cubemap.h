@@ -38,10 +38,17 @@ public:
       UniqueTextureData faceData = loadTexture(path, false);
 
       if (faceData) {
+
         if (i == 0) {
-          glTextureStorage2D(m_ID, 1, faceData->internalFormat, faceData->width,
-                             faceData->height);
+
+          m_width = faceData->width;
+          m_height = faceData->height;
+          m_format = faceData->format;
+          m_internalFormat = faceData->internalFormat;
+
+          glTextureStorage2D(m_ID, 1, m_internalFormat, m_width, m_height);
         }
+
         glTextureSubImage3D(m_ID, 0, 0, 0, i, faceData->width, faceData->height,
                             1, faceData->format, GL_UNSIGNED_BYTE,
                             faceData->rawData);

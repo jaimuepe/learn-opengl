@@ -1,162 +1,226 @@
 #ifndef BASIC_MESHES_H
 #define BASIC_MESHES_H
 
+#include "mesh.h"
+
 #include <glm/glm.hpp>
 
 #include <vector>
 
 struct MeshCreateInfo {
 
-  MeshCreateInfo()
-      : scale(glm::vec3{1.0f}), insideOut(false), uvScale(glm::vec2{1.0f}) {}
+  MeshCreateInfo() {}
 
-  glm::vec3 scale;
-  bool insideOut;
-  glm::vec2 uvScale;
+  glm::vec3 scale = glm::vec3{1.0f};
+  bool insideOut = false;
+  glm::vec2 uvScale = glm::vec2{1.0f};
 };
 
 namespace {
 
-void manipulateData(std::vector<float> &data, const glm::vec3 &scale,
-                    bool insideOut, const glm::vec2 &uvScale) {
+MeshData createMeshData(const std::vector<float> &vertexData) {
 
-  size_t nRows = data.size() / 8;
+  // 3x position, 2x texcoords
+  assert(vertexData.size() % 15 == 0);
 
-  for (size_t i = 0; i < nRows; ++i) {
+  std::vector<Vertex> vertices;
 
-    int index = 8 * i;
+  unsigned int nTris = vertexData.size() / 15;
 
-    data[index] *= scale.x;
-    data[index + 1] *= scale.y;
-    data[index + 2] *= scale.z;
+  // +15 for next triangle
+  for (size_t i = 0; i < nTris; ++i) {
 
-    data[index + 6] *= uvScale.s;
-    data[index + 7] *= uvScale.t;
+    for (size_t j = 0; j < 3; ++j) {
 
-    if (insideOut) {
+      float x = vertexData[(3 * i + j) * 5];
+      float y = vertexData[(3 * i + j) * 5 + 1];
+      float z = vertexData[(3 * i + j) * 5 + 2];
 
-      if (i > 0 && (i + 1) % 3 == 0) {
+      float s = vertexData[(3 * i + j) * 5 + 3];
+      float t = vertexData[(3 * i + j) * 5 + 4];
 
-        // each 3 triangles we swap the second and the third
+      Vertex vert;
+      vert.position = glm::vec3{x, y, z};
+      vert.texCoords = glm::vec2{s, t};
 
-        float x = data[index - 8];
-        float y = data[index - 8 + 1];
-        float z = data[index - 8 + 2];
+      vertices.push_back(vert);
+    }
 
-        float s = data[index - 8 + 6];
-        float t = data[index - 8 + 7];
+    // end of triangle
 
-        data[index - 8] = data[index];
-        data[index] = x;
+    Vertex &v0 = vertices[3 * i];
+    Vertex &v1 = vertices[3 * i + 1];
+    Vertex &v2 = vertices[3 * i + 2];
 
-        data[index - 8 + 1] = data[index + 1];
-        data[index + 1] = y;
+    glm::vec3 &a = v0.position;
+    glm::vec3 &b = v1.position;
+    glm::vec3 &c = v2.position;
 
-        data[index - 8 + 2] = data[index + 2];
-        data[index + 2] = z;
+    glm::vec3 e1 = b - a;
+    glm::vec3 e2 = c - a;
 
-        data[index - 8 + 6] = data[index + 6];
-        data[index + 6] = s;
+    glm::vec3 normal = glm::normalize(glm::cross(e1, e2));
 
-        data[index - 8 + 7] = data[index + 7];
-        data[index + 7] = t;
-      }
+    v0.normal = normal;
+    v1.normal = normal;
+    v2.normal = normal;
 
-      data[index + 3] *= -1;
-      data[index + 4] *= -1;
-      data[index + 5] *= -1;
+    glm::vec2 &uvA = v0.texCoords;
+    glm::vec2 &uvB = v1.texCoords;
+    glm::vec2 &uvC = v2.texCoords;
+
+    glm::vec2 dUV1 = uvB - uvA;
+    glm::vec2 dUV2 = uvC - uvA;
+
+    float f = 1.0f / (dUV1.x * dUV2.y - dUV2.x * dUV1.y);
+
+    glm::vec3 tangent;
+    tangent.x = f * (dUV2.y * e1.x - dUV1.y * e2.x);
+    tangent.y = f * (dUV2.y * e1.y - dUV1.y * e2.y);
+    tangent.z = f * (dUV2.y * e1.z - dUV1.y * e2.z);
+
+    glm::vec3 bitangent;
+    bitangent.x = f * (-dUV2.x * e1.x + dUV1.x * e2.x);
+    bitangent.y = f * (-dUV2.x * e1.y + dUV1.x * e2.y);
+    bitangent.z = f * (-dUV2.x * e1.z + dUV1.x * e2.z);
+
+    v0.tangent = tangent;
+    v1.tangent = tangent;
+    v2.tangent = tangent;
+
+    v0.bitangent = bitangent;
+    v1.bitangent = bitangent;
+    v2.bitangent = bitangent;
+  }
+
+  MeshData meshData;
+  meshData.vertices = vertices;
+
+  return meshData;
+}
+
+void manipulateData(MeshData &meshData, const MeshCreateInfo &createInfo) {
+
+  std::vector<Vertex> &vertices = meshData.vertices;
+
+  assert(vertices.size() % 3 == 0);
+
+  for (size_t i = 0; i < vertices.size(); i += 3) {
+
+    Vertex &v0 = vertices[i];
+    Vertex &v1 = vertices[i + 1];
+    Vertex &v2 = vertices[i + 2];
+
+    v0.position *= createInfo.scale;
+    v1.position *= createInfo.scale;
+    v2.position *= createInfo.scale;
+
+    v0.texCoords *= createInfo.uvScale;
+
+    if (createInfo.insideOut) {
+
+      // swap 2nd and 3rd vertices
+      std::swap(vertices[i + 1], vertices[i + 2]);
+
+      // invert normals
+      v0.normal *= -1.0f;
+      v1.normal *= -1.0f;
+      v2.normal *= -1.0f;
     }
   }
 }
 
 } // namespace
 
-std::vector<float> createCubeVertexData(const MeshCreateInfo &createInfo = {}) {
+Mesh createQuad(const MeshCreateInfo &createInfo = {}) {
 
   // clang-format off
 
   std::vector<float> vertexData = {
-    
-    // position             // normals            // uvs
-    
-    // back face
-     0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f, // bottom-left
-    -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 0.0f, // top-left
-     0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 1.0f, // bottom-right
-     0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 1.0f, // bottom-right
-    -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 0.0f, // top-left
-    -0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f, // top-right
+    // position           // uvs
+    -1.0f, 0.0f, -1.0f,   0.0f, 1.0f, // top-left
+    -1.0f, 0.0f,  1.0f,   0.0f, 0.0f, // bottom left
+     1.0f, 0.0f, -1.0f,   1.0f, 1.0f, // top-right
 
-    // front face
-    -0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 0.0f, // bottom-left
-     0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 1.0f, // top-left
-    -0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 1.0f, // top-left
-     0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 1.0f, // top-right
-
-    // left face
-    -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 0.0f, // bottom-left
-    -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 1.0f, // top-left
-    -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 1.0f, // top-left
-    -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 1.0f, // top-right
-
-    // right face
-     0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 0.0f, // bottom-left
-     0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f, // top-left
-     0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f, // top-left
-     0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 1.0f, // top-right
-
-    // bottom face
-    -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 0.0f, // bottom-left
-     0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-    -0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 1.0f, // top-left
-    -0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 1.0f, // top-left
-     0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-     0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 1.0f, // top-right
-
-    // top-face
-    -0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 0.0f, // bottom-left
-     0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f, // top-left
-    -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f, // top-left
-     0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 1.0f, // top-right
+     1.0f, 0.0f, -1.0f,   1.0f, 1.0f, // top-right
+    -1.0f, 0.0f,  1.0f,   0.0f, 0.0f, // bottom-left
+     1.0f, 0.0f,  1.0f,   1.0f, 0.0f  // bottom-right
   };
-
   // clang-format on
 
-  manipulateData(vertexData, createInfo.scale, createInfo.insideOut,
-                 createInfo.uvScale);
+  MeshData meshData = createMeshData(vertexData);
+  manipulateData(meshData, createInfo);
 
-  return std::move(vertexData);
+  return Mesh{meshData};
 }
 
-std::vector<float> createQuadVertexData(const MeshCreateInfo &createInfo = {}) {
-
-  // defaults to plane XZ
+Mesh createCube(const MeshCreateInfo &createInfo = {}) {
 
   // clang-format off
+
   std::vector<float> vertexData = {
+    
+    // position             // uvs
+    
+    // back face
+     0.5f, -0.5f, -0.5f,    0.0f, 0.0f, // bottom-left
+    -0.5f, -0.5f, -0.5f,    1.0f, 0.0f, // top-left
+     0.5f,  0.5f, -0.5f,    0.0f, 1.0f, // bottom-right
 
-    // position          // normals          // uvs
-    -1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,   0.0f, 1.0f, // top-left
-    -1.0f, 0.0f,  1.0f,   0.0f, 1.0f, 0.0f,   0.0f, 0.0f, // bottom left
-     1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,   1.0f, 1.0f, // top-right
+     0.5f,  0.5f, -0.5f,    0.0f, 1.0f, // bottom-right
+    -0.5f, -0.5f, -0.5f,    1.0f, 0.0f, // top-left
+    -0.5f,  0.5f, -0.5f,    1.0f, 1.0f, // top-right
 
-     1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,   1.0f, 1.0f, // top-right
-    -1.0f, 0.0f,  1.0f,   0.0f, 1.0f, 0.0f,   0.0f, 0.0f, // bottom-left
-     1.0f, 0.0f,  1.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f  // bottom-right
+    // front face
+    -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, // bottom-left
+     0.5f, -0.5f,  0.5f,    1.0f, 0.0f, // bottom-right
+    -0.5f,  0.5f,  0.5f,    0.0f, 1.0f, // top-left
+
+    -0.5f,  0.5f,  0.5f,    0.0f, 1.0f, // top-left
+     0.5f, -0.5f,  0.5f,    1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f,  0.5f,    1.0f, 1.0f, // top-right
+
+    // left face
+    -0.5f, -0.5f, -0.5f,    0.0f, 0.0f, // bottom-left
+    -0.5f, -0.5f,  0.5f,    1.0f, 0.0f, // bottom-right
+    -0.5f,  0.5f, -0.5f,    0.0f, 1.0f, // top-left
+
+    -0.5f,  0.5f, -0.5f,    0.0f, 1.0f, // top-left
+    -0.5f, -0.5f,  0.5f,    1.0f, 0.0f, // bottom-right
+    -0.5f,  0.5f,  0.5f,    1.0f, 1.0f, // top-right
+
+    // right face
+     0.5f, -0.5f,  0.5f,    0.0f, 0.0f, // bottom-left
+     0.5f, -0.5f, -0.5f,    1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f,  0.5f,    0.0f, 1.0f, // top-left
+
+     0.5f,  0.5f,  0.5f,    0.0f, 1.0f, // top-left
+     0.5f, -0.5f, -0.5f,    1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f, -0.5f,    1.0f, 1.0f, // top-right
+
+    // bottom face
+    -0.5f, -0.5f, -0.5f,    0.0f, 0.0f, // bottom-left
+     0.5f, -0.5f, -0.5f,    1.0f, 0.0f, // bottom-right
+    -0.5f, -0.5f,  0.5f,    0.0f, 1.0f, // top-left
+
+    -0.5f, -0.5f,  0.5f,    0.0f, 1.0f, // top-left
+     0.5f, -0.5f, -0.5f,    1.0f, 0.0f, // bottom-right
+     0.5f, -0.5f,  0.5f,    1.0f, 1.0f, // top-right
+
+    // top-face
+    -0.5f,  0.5f,  0.5f,    0.0f, 0.0f, // bottom-left
+     0.5f,  0.5f,  0.5f,    1.0f, 0.0f, // bottom-right
+    -0.5f,  0.5f, -0.5f,    0.0f, 1.0f, // top-left
+
+    -0.5f,  0.5f, -0.5f,    0.0f, 1.0f, // top-left
+     0.5f,  0.5f,  0.5f,    1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f, -0.5f,    1.0f, 1.0f, // top-right
   };
 
-  manipulateData(vertexData, createInfo.scale, createInfo.insideOut, createInfo.uvScale);
-  return std::move(vertexData);
+  MeshData meshData = createMeshData(vertexData);
+  manipulateData(meshData, createInfo);
 
-  // clang-format on
+  return Mesh{meshData};
 }
 
 #endif // BASIC_MESHES_H

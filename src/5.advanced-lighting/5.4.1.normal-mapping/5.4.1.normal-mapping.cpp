@@ -52,18 +52,14 @@ float shadowAspect =
 float lastMouseX = static_cast<float>(WIDTH) * 0.5f;
 float lastMouseY = static_cast<float>(HEIGHT) * 0.5f;
 
-Model *suzzane;
-Model *backpack;
+gpu::texture::Texture2D wallDiffuseTexture;
+gpu::texture::Texture2D blackUnitTexture;
+gpu::texture::Texture2D whiteUnitTexture;
+gpu::texture::Texture2D wallNormalTexture;
 
-Mesh roomMesh;
 Mesh cubeMesh;
 
-gpu::texture::Texture2D containerDiffTex;
-gpu::texture::Texture2D containerSpecTex;
-
-gpu::texture::Texture2D woodTex;
-
-GLuint whiteTex10;
+Model suzzane;
 
 size_t nActiveLights = 1;
 
@@ -126,19 +122,6 @@ int main() {
 
   // shadow mapping
 
-  // directional
-
-  gpu::framebuffer::Framebuffer depthMapFramebuffer;
-  gpu::texture::Texture2D depthTexture{SHADOW_WIDTH, SHADOW_HEIGHT,
-                                       GL_DEPTH_COMPONENT16};
-
-  depthTexture.setWrapST(gpu::texture::Wrap::CLAMP_TO_BORDER);
-  depthTexture.setMinMagFilter(gpu::texture::Filter::NEAREST);
-  depthTexture.setBorderColor(glm::vec4{1.0f, 1.0f, 1.0f, 1.0f});
-
-  depthMapFramebuffer.setDepthAttachment(depthTexture);
-  depthMapFramebuffer.checkStatus();
-
   // omni
 
   gpu::framebuffer::Framebuffer depthMapOmniFramebuffers[MAX_POINT_LIGHTS];
@@ -173,43 +156,24 @@ int main() {
 
   gpu::UniformBuffer camUniformBuffer{uboCreateInfo};
 
-  // room
-  MeshCreateInfo roomVertexDataCreateInfo;
-  roomVertexDataCreateInfo.insideOut = true;
-
-  roomMesh = createCube(roomVertexDataCreateInfo);
-
-  // cubes
-
   cubeMesh = createCube();
 
-  containerDiffTex = gpu::texture::Texture2D{"container2.png"};
-  containerSpecTex = gpu::texture::Texture2D{"container2_specular.png"};
+  wallDiffuseTexture = gpu::texture::Texture2D{"brickwall.jpg"};
 
-  woodTex = gpu::texture::Texture2D{"wood.png"};
+  wallNormalTexture = gpu::texture::Texture2D{"brickwall_normal.jpg"};
 
-  glCreateTextures(GL_TEXTURE_2D, 1, &whiteTex10);
-  // 1px x 1px, single color texture (useful for default values)
-  {
-    float data[] = {1.0f, 1.0f, 1.0f};
-    glTextureStorage2D(whiteTex10, 1, GL_RGB8, 1, 1);
-    glTextureSubImage2D(whiteTex10, 0, 0, 0, 1, 1, GL_RGB, GL_FLOAT, &data);
-  }
+  blackUnitTexture =
+      gpu::texture::createUnitTexture2D(glm::vec3{0.0f, 0.0f, 0.0f});
+
+  whiteUnitTexture =
+      gpu::texture::createUnitTexture2D(glm::vec3{1.0f, 1.0f, 1.0f});
 
   // vsync off
   glfwSwapInterval(0);
 
-  std::stringstream monkeyModelPath;
-  monkeyModelPath << getModelPath("monkey") << separator << "monkey.obj";
-
-  suzzane = new Model{monkeyModelPath.str()};
-
   lightCubeShader = gpu::Shader{"light-cube.vs", "light-cube.fs"};
 
   gpu::Shader lightingShader{"lit-shadows.vs", "lit-shadows.fs"};
-
-  gpu::Shader shadowMappingDepthShader{"shadow-mapping-depth.vs",
-                                       "shadow-mapping-depth.fs"};
 
   gpu::Shader pointShadowsDepthShader{"point-shadows-depth.vs",
                                       "point-shadows-depth.fs",
@@ -217,15 +181,19 @@ int main() {
 
   lightingShader.setInt("diffuse_texture0", 0);
   lightingShader.setInt("specular_texture0", 1);
+  lightingShader.setInt("normalMap", 2);
 
-  lightingShader.setInt("dirLightShadowMap", 2);
+  for (size_t i = 0; i < MAX_POINT_LIGHTS; ++i) {
+    lightingShader.setInt("pointLightShadowMaps[" + std::to_string(i) + "]",
+                          3 + i);
+  }
 
   // point lights
 
   {
     {
       PointLight light;
-      light.position = glm::vec3{-1.3f, 0.1f, -1.7f};
+      light.position = glm::vec3{0.0f, 1.0f, 0.0f};
       light.ambient = glm::vec3{0.01f};
       light.diffuse = glm::vec3{0.2, 0.2, 0.2};
       light.specular = glm::vec3{0.3f, 0.3f, 0.3f};
@@ -263,52 +231,8 @@ int main() {
     }
   }
 
-  // dirLight params
-
-  glm::vec3 lightDir = glm::vec3{0.2f, -0.4f, 0.1f};
-
-  /*
-    lightingShader.setVec3("dirLight.ambient", 0.02f, 0.02f, 0.02f);
-    lightingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
-    lightingShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
-  */
-
-  lightingShader.setVec3("dirLight.ambient", 0.0f, 0.0f, 0.0f);
-  lightingShader.setVec3("dirLight.diffuse", 0.0f, 0.0f, 0.0f);
-  lightingShader.setVec3("dirLight.specular", 0.0f, 0.0f, 0.0f);
-
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
-
-  // if the directional light is going to be static we only need to do this once
-  // (baked shadows!)
-  {
-    glm::vec3 lightPos = -10.0f * lightDir;
-
-    glm::mat4 view = glm::lookAt(lightPos, glm::vec3{0.0f, 0.0f, 0.0f},
-                                 glm::vec3{0.0f, 1.0f, 0.0f});
-
-    // ortho, since a directional light has no perspective distoriton
-    glm::mat4 projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
-
-    glm::mat4 lightSpaceMatrix = projection * view;
-
-    shadowMappingDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-    lightingShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-
-    depthMapFramebuffer.bind();
-
-    {
-      using namespace gpu::framebuffer;
-
-      setViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-      clear(ClearFlagBits::DEPTH_BIT);
-    }
-
-    drawScene(shadowMappingDepthShader);
-  }
-
-  // same for the point lights (baked shadows!)
 
   gpu::framebuffer::setClearColor(0.1f, 0.1f, 0.1f);
 
@@ -338,8 +262,6 @@ int main() {
 
     // input
     process_input(window);
-
-    pointShadowsDepthShader.setInt("nPointLights", nActiveLights);
 
     // first pass - generate shadows
     {
@@ -422,7 +344,7 @@ int main() {
       }
     }
 
-    // draw scene normally (with shadow info from the baked pass)
+    // draw scene normally (with shadow info from the shadow pass)
     {
       {
         using namespace gpu::framebuffer;
@@ -441,16 +363,13 @@ int main() {
                                        camera.getProjectionMatrix());
       }
 
-      // dir light
-      { lightingShader.setVec3("dirLight.direction", lightDir); }
-
       // point lights
       {
         lightingShader.setInt("nPointLights", nActiveLights);
 
         for (size_t i = 0; i < nActiveLights; ++i) {
 
-          const PointLight &point = pointLights[i];
+          PointLight &point = pointLights[i];
           std::string prefix = "pointLights[" + std::to_string(i) + "]";
 
           lightingShader.setFloat(prefix + ".zNear", 0.1f);
@@ -474,8 +393,6 @@ int main() {
         }
       }
 
-      glBindTextureUnit(2, depthTexture.getID());
-
       drawScene(lightingShader);
       drawLightCubes();
     }
@@ -488,18 +405,9 @@ int main() {
     glfwPollEvents();
   }
 
-  delete suzzane;
-
-  depthMapFramebuffer.destroy();
-
   camUniformBuffer.destroy();
 
   lightingShader.destroy();
-
-  containerDiffTex.destroy();
-  containerSpecTex.destroy();
-
-  glDeleteTextures(1, &whiteTex10);
 
   glfwTerminate();
 
@@ -531,74 +439,21 @@ void drawScene(const gpu::Shader &shader) {
 
   shader.use();
 
-  // room
-  {
-    glBindTextureUnit(0, woodTex.getID());
-    glBindTextureUnit(1, 0);
+  glBindTextureUnit(0, wallDiffuseTexture.getID());
+  glBindTextureUnit(1, whiteUnitTexture.getID());
+  glBindTextureUnit(2, wallNormalTexture.getID());
 
+  // cube
+  {
     glm::mat4 model{1.0f};
-    model = glm::scale(model, glm::vec3{8.0f});
+    model = glm::rotate(model, -currentTime,
+                        glm::normalize(glm::vec3{1.0f, 0.0f, 1.0f}));
+
+    model = glm::scale(model, glm::vec3{1.0f, 1.0f, 0.01f});
 
     shader.setMat4("model", model);
-    roomMesh.draw(shader);
-  }
 
-  // cubes
-  {
-    glBindTextureUnit(0, containerDiffTex.getID());
-    glBindTextureUnit(1, containerSpecTex.getID());
-
-    // 1
-    glm::mat4 model{1.0f};
-    model = glm::translate(model, glm::vec3{0.0f, 0.75f, 0.0});
-    model = glm::scale(model, glm::vec3{0.3f});
-    shader.setMat4("model", model);
     cubeMesh.draw(shader);
-
-    // 2
-    model = glm::mat4{1.0f};
-    model = glm::translate(model, glm::vec3{2.0f, -0.25f, 1.0});
-    model = glm::rotate(model, glm::radians(35.0f),
-                        glm::normalize(glm::vec3{0.0, 1.0, 1.0}));
-    model = glm::scale(model, glm::vec3{0.5f});
-
-    shader.setMat4("model", model);
-    cubeMesh.draw(shader);
-
-    // 3
-    model = glm::mat4{1.0f};
-    model = glm::translate(model, glm::vec3{-1.0f, 0.0f, 2.0});
-    model = glm::rotate(model, glm::radians(60.0f),
-                        glm::normalize(glm::vec3{1.0, 0.0, 1.0}));
-    model = glm::scale(model, glm::vec3{0.25});
-
-    shader.setMat4("model", model);
-    cubeMesh.draw(shader);
-  }
-
-  // monkey
-  {
-    glBindTextureUnit(0, whiteTex10);
-    glBindTextureUnit(1, 0);
-
-    glm::mat4 model = glm::mat4{1.0f};
-
-    model = glm::rotate(model, glm::radians(15.0f * currentTime),
-                        glm::vec3{0.3f, 0.4f, 0.0f});
-
-    shader.setMat4("model", model);
-    suzzane->draw(shader);
-  }
-
-  // backpack
-  {
-    glm::mat4 model = glm::mat4{1.0f};
-    model = glm::translate(model, glm::vec3{0.0f, 1.0f, 0.0f});
-    model = glm::scale(model, glm::vec3{0.6f});
-
-    shader.setMat4("model", model);
-
-    // backpack->draw(shader);
   }
 
   glUseProgram(0);

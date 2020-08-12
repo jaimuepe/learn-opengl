@@ -3,6 +3,7 @@
 #include "cubemap.h"
 #include "flycamera.h"
 #include "framebuffer.h"
+#include "mesh.h"
 #include "model.h"
 #include "pointlight.h"
 #include "renderbuffer.h"
@@ -54,11 +55,8 @@ float lastMouseY = static_cast<float>(HEIGHT) * 0.5f;
 Model *suzzane;
 Model *backpack;
 
-gpu::VertexArray roomVAO;
-gpu::VertexBuffer roomVBO;
-
-gpu::VertexArray cubeVAO;
-gpu::VertexBuffer cubeVBO;
+Mesh roomMesh;
+Mesh cubeMesh;
 
 gpu::texture::Texture2D containerDiffTex;
 gpu::texture::Texture2D containerSpecTex;
@@ -179,42 +177,11 @@ int main() {
   MeshCreateInfo roomVertexDataCreateInfo;
   roomVertexDataCreateInfo.insideOut = true;
 
-  std::vector<float> roomVertices =
-      createCubeVertexData(roomVertexDataCreateInfo);
-
-  roomVBO = gpu::VertexBuffer{roomVertices};
-
-  gpu::VertexArrayBufferBindInfo roomBindInfo;
-  {
-    roomBindInfo.pVertexBuffer = &roomVBO;
-    roomBindInfo.nBindings = 3;
-
-    size_t indices[] = {0, 1, 2};
-    size_t valuesPerVertex[] = {3, 3, 2};
-
-    roomBindInfo.pBindIndices = indices;
-    roomBindInfo.pValuesPerVertex = valuesPerVertex;
-    roomVAO.bindBuffer(roomBindInfo);
-  }
+  roomMesh = createCube(roomVertexDataCreateInfo);
 
   // cubes
 
-  std::vector<float> cubeVertices = createCubeVertexData();
-
-  cubeVBO = gpu::VertexBuffer{cubeVertices};
-
-  gpu::VertexArrayBufferBindInfo cubeBindInfo;
-  {
-    cubeBindInfo.pVertexBuffer = &cubeVBO;
-    cubeBindInfo.nBindings = 3;
-
-    size_t indices[] = {0, 1, 2};
-    size_t valuesPerVertex[] = {3, 3, 2};
-
-    cubeBindInfo.pBindIndices = indices;
-    cubeBindInfo.pValuesPerVertex = valuesPerVertex;
-    cubeVAO.bindBuffer(cubeBindInfo);
-  }
+  cubeMesh = createCube();
 
   containerDiffTex = gpu::texture::Texture2D{"container2.png"};
   containerSpecTex = gpu::texture::Texture2D{"container2_specular.png"};
@@ -525,9 +492,6 @@ int main() {
 
   depthMapFramebuffer.destroy();
 
-  cubeVAO.destroy();
-  cubeVBO.destroy();
-
   camUniformBuffer.destroy();
 
   lightingShader.destroy();
@@ -544,8 +508,6 @@ int main() {
 
 void drawLightCubes() {
 
-  cubeVAO.bind();
-
   lightCubeShader.use();
 
   for (size_t i = 0; i < nActiveLights; ++i) {
@@ -558,7 +520,7 @@ void drawLightCubes() {
     lightCubeShader.setVec3("lightColor",
                             glm::normalize(pointLights[i].diffuse));
 
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    cubeMesh.draw(lightCubeShader);
   }
 
   glUseProgram(0);
@@ -571,7 +533,6 @@ void drawScene(const gpu::Shader &shader) {
 
   // room
   {
-    roomVAO.bind();
 
     glBindTextureUnit(0, woodTex.getID());
     glBindTextureUnit(1, 0);
@@ -581,7 +542,7 @@ void drawScene(const gpu::Shader &shader) {
 
     shader.setMat4("model", model);
 
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    roomMesh.draw(shader);
   }
 
   // cubes
@@ -589,14 +550,12 @@ void drawScene(const gpu::Shader &shader) {
     glBindTextureUnit(0, containerDiffTex.getID());
     glBindTextureUnit(1, containerSpecTex.getID());
 
-    cubeVAO.bind();
-
     // 1
     glm::mat4 model{1.0f};
     model = glm::translate(model, glm::vec3{0.0f, 0.75f, 0.0});
     model = glm::scale(model, glm::vec3{0.3f});
     shader.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    cubeMesh.draw(shader);
 
     // 2
     model = glm::mat4{1.0f};
@@ -606,7 +565,7 @@ void drawScene(const gpu::Shader &shader) {
     model = glm::scale(model, glm::vec3{0.5f});
 
     shader.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    cubeMesh.draw(shader);
 
     // 3
     model = glm::mat4{1.0f};
@@ -616,7 +575,7 @@ void drawScene(const gpu::Shader &shader) {
     model = glm::scale(model, glm::vec3{0.25});
 
     shader.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    cubeMesh.draw(shader);
   }
 
   // monkey

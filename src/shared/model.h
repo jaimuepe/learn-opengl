@@ -17,7 +17,7 @@
 #include <sstream>
 #include <vector>
 
-std::map<std::string, Texture> textures_loaded;
+std::map<std::string, MeshTexture> textures_loaded;
 
 gpu::texture::Texture2D textureFromFile(const std::string &path,
                                         const std::string &directory);
@@ -26,6 +26,8 @@ class Model {
 
 public:
   std::vector<Mesh> m_meshes;
+
+  Model() {}
 
   Model(const std::string &path) { loadModel(path); }
 
@@ -43,7 +45,8 @@ private:
     Assimp::Importer importer;
 
     const aiScene *scene =
-        importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+        importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs |
+                                    aiProcess_CalcTangentSpace);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode) {
@@ -83,7 +86,7 @@ private:
 
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    std::vector<Texture> textures;
+    std::vector<MeshTexture> textures;
 
     // process vertex positions
     for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
@@ -108,6 +111,18 @@ private:
         vertex.texCoords = texCoords;
       }
 
+      glm::vec3 tangent;
+      tangent.x = mesh->mTangents[i].x;
+      tangent.y = mesh->mTangents[i].y;
+      tangent.z = mesh->mTangents[i].z;
+      vertex.tangent = tangent;
+
+      glm::vec3 bitangent;
+      bitangent.x = mesh->mBitangents[i].x;
+      bitangent.y = mesh->mBitangents[i].y;
+      bitangent.z = mesh->mBitangents[i].z;
+      vertex.bitangent = tangent;
+
       vertices.push_back(vertex);
     }
 
@@ -125,24 +140,29 @@ private:
 
       aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-      std::vector<Texture> diffuseMaps = loadMaterialTextures(
+      std::vector<MeshTexture> diffuseMaps = loadMaterialTextures(
           material, aiTextureType_DIFFUSE, "texture_diffuse");
 
       textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-      std::vector<Texture> specularMaps = loadMaterialTextures(
+      std::vector<MeshTexture> specularMaps = loadMaterialTextures(
           material, aiTextureType_SPECULAR, "texture_specular");
 
       textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
     }
 
-    return Mesh(vertices, indices, textures);
+    MeshData meshData;
+    meshData.vertices = vertices;
+    meshData.indices = indices;
+    meshData.textures = textures;
+
+    return Mesh(meshData);
   }
 
-  std::vector<Texture> loadMaterialTextures(const aiMaterial *mat,
-                                            aiTextureType type,
-                                            std::string typeName) const {
-    std::vector<Texture> textures;
+  std::vector<MeshTexture> loadMaterialTextures(const aiMaterial *mat,
+                                                aiTextureType type,
+                                                std::string typeName) const {
+    std::vector<MeshTexture> textures;
 
     for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i) {
 
@@ -151,21 +171,20 @@ private:
 
       std::string texPath = str.C_Str();
 
-      std::map<std::string, Texture>::iterator it =
+      std::map<std::string, MeshTexture>::iterator it =
           textures_loaded.find(texPath);
 
       if (it == textures_loaded.end()) {
 
-        Texture texture;
+        MeshTexture meshTexture;
 
         gpu::texture::Texture2D tex = textureFromFile(texPath, m_directory);
-        texture.id = tex.getID();
-        texture.type = typeName;
-        texture.path = texPath;
+        meshTexture.texture = tex;
+        meshTexture.type = typeName;
 
-        textures_loaded[texPath] = texture;
+        textures_loaded[texPath] = meshTexture;
 
-        textures.push_back(texture);
+        textures.push_back(meshTexture);
 
       } else {
         textures.push_back(it->second);

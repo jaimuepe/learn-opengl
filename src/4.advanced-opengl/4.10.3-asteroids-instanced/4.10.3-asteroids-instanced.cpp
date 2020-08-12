@@ -248,7 +248,7 @@ int main() {
 
         glBindVertexArray(rock.m_meshes[i].getVAO());
 
-        glBindTextureUnit(0, rock.m_meshes[i].m_textures[0].id);
+        glBindTextureUnit(0, rock.m_meshes[i].m_textures[0].texture.getID());
 
         glDrawElementsInstanced(GL_TRIANGLES, rock.m_meshes[i].m_indices.size(),
                                 GL_UNSIGNED_INT, nullptr, nrRocks);
