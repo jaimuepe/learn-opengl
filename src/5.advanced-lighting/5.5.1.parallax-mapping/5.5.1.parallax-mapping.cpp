@@ -56,7 +56,9 @@ gpu::texture::Texture2D wallDiffuseTexture;
 gpu::texture::Texture2D blackUnitTexture;
 gpu::texture::Texture2D whiteUnitTexture;
 gpu::texture::Texture2D wallNormalTexture;
+gpu::texture::Texture2D wallDisplacementTexture;
 
+Mesh planeMesh;
 Mesh cubeMesh;
 
 size_t nActiveLights = 1;
@@ -154,11 +156,13 @@ int main() {
 
   gpu::UniformBuffer camUniformBuffer{uboCreateInfo};
 
+  planeMesh = createQuad();
   cubeMesh = createCube();
 
-  wallDiffuseTexture = gpu::texture::Texture2D{"brickwall.jpg"};
+  wallDiffuseTexture = gpu::texture::Texture2D{"bricks2.jpg"};
 
-  wallNormalTexture = gpu::texture::Texture2D{"brickwall_normal.jpg"};
+  wallNormalTexture = gpu::texture::Texture2D{"bricks2_normal.jpg"};
+  wallDisplacementTexture = gpu::texture::Texture2D("bricks2_disp.jpg");
 
   blackUnitTexture =
       gpu::texture::createUnitTexture2D(glm::vec3{0.0f, 0.0f, 0.0f});
@@ -180,10 +184,13 @@ int main() {
   lightingShader.setInt("diffuse_texture0", 0);
   lightingShader.setInt("specular_texture0", 1);
   lightingShader.setInt("normalMap", 2);
+  lightingShader.setInt("depthMap", 3);
+
+  lightingShader.setFloat("heightScale", 0.1f);
 
   for (size_t i = 0; i < MAX_POINT_LIGHTS; ++i) {
     lightingShader.setInt("pointLightShadowMaps[" + std::to_string(i) + "]",
-                          3 + i);
+                          4 + i);
   }
 
   // point lights
@@ -384,9 +391,9 @@ int main() {
           lightingShader.setFloat(prefix + ".quadraticAtt", point.quadraticAtt);
 
           lightingShader.setInt(
-              "pointLightShadowMaps[" + std::to_string(i) + "]", 3 + i);
+              "pointLightShadowMaps[" + std::to_string(i) + "]", 4 + i);
 
-          glBindTextureUnit(3 + i,
+          glBindTextureUnit(4 + i,
                             depthMapOmniFramebuffers[i].getDepthAttachmentID());
         }
       }
@@ -440,18 +447,22 @@ void drawScene(const gpu::Shader &shader) {
   glBindTextureUnit(0, wallDiffuseTexture.getID());
   glBindTextureUnit(1, whiteUnitTexture.getID());
   glBindTextureUnit(2, wallNormalTexture.getID());
+  glBindTextureUnit(3, wallDisplacementTexture.getID());
 
   // cube
   {
     glm::mat4 model{1.0f};
-    model = glm::rotate(model, -currentTime,
-                        glm::normalize(glm::vec3{1.0f, 0.0f, 1.0f}));
 
-    model = glm::scale(model, glm::vec3{1.0f, 1.0f, 0.01f});
+    model = glm::translate(model, glm::vec3{0.0f, 0.0f, -2.0f});
+
+    model = glm::rotate(model, glm::radians(90.0f),
+                        glm::normalize(glm::vec3{1.0f, 0.0f, 0.0f}));
+
+    model = glm::scale(model, glm::vec3{3.0f, 1.0f, 3.0f});
 
     shader.setMat4("model", model);
 
-    cubeMesh.draw(shader);
+    planeMesh.draw(shader);
   }
 
   glUseProgram(0);
