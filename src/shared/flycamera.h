@@ -2,8 +2,8 @@
 #ifndef FLY_CAMERA_H
 #define FLY_CAMERA_H
 
-#include <glm\glm.hpp>
-#include <glm\gtc\matrix_transform.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 class FlyCamera {
 
@@ -16,12 +16,13 @@ public:
     float aspect, 
     float zNear, 
     float zFar)
-      : m_fov(fov),
+      : 
+        m_yaw(-glm::half_pi<float>()), // -90.0 deg
+        m_pitch(0.0f), 
+        m_fov(fov),
         m_aspect(aspect),
         m_zNear(zNear),
         m_zFar(zFar),
-        m_pitch(0.0f), 
-        m_yaw(-glm::half_pi<float>()), // -90.0 deg
         m_position(pos),
         m_forward(glm::vec3{0.0f, 0.0f, -1.0f}),
         m_viewMatrixDirty(true),

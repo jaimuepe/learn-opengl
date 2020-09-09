@@ -6,10 +6,10 @@
 #include "shader.h"
 #include "texture2d.h"
 
-#include <assimp\Importer.hpp>
-#include <assimp\postprocess.h>
-#include <assimp\scene.h>
-#include <glm\glm.hpp>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+#include <glm/common.hpp>
 #include <stb_image.h>
 
 #include <filesystem>
@@ -22,7 +22,8 @@ std::map<std::string, MeshTexture> textures_loaded;
 gpu::texture::Texture2D textureFromFile(const std::string &path,
                                         const std::string &directory);
 
-class Model {
+class Model
+{
 
 public:
   std::vector<Mesh> m_meshes;
@@ -31,8 +32,10 @@ public:
 
   Model(const std::string &path) { loadModel(path); }
 
-  void draw(const gpu::Shader &shader) {
-    for (unsigned int i = 0; i < m_meshes.size(); ++i) {
+  void draw(const gpu::Shader &shader)
+  {
+    for (unsigned int i = 0; i < m_meshes.size(); ++i)
+    {
       m_meshes[i].draw(shader);
     }
   }
@@ -40,7 +43,8 @@ public:
 private:
   std::string m_directory;
 
-  void loadModel(const std::string &path) {
+  void loadModel(const std::string &path)
+  {
 
     Assimp::Importer importer;
 
@@ -49,7 +53,8 @@ private:
                                     aiProcess_CalcTangentSpace);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
-        !scene->mRootNode) {
+        !scene->mRootNode)
+    {
 
       std::stringstream ss;
       ss << "Error loading model " << path << ":\n"
@@ -70,26 +75,31 @@ private:
     processNode(scene->mRootNode, scene);
   }
 
-  void processNode(aiNode *node, const aiScene *scene) {
+  void processNode(aiNode *node, const aiScene *scene)
+  {
 
-    for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
+    for (unsigned int i = 0; i < node->mNumMeshes; ++i)
+    {
       aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
       m_meshes.push_back(processMesh(mesh, scene));
     }
 
-    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
+    for (unsigned int i = 0; i < node->mNumChildren; ++i)
+    {
       processNode(node->mChildren[i], scene);
     }
   }
 
-  Mesh processMesh(aiMesh *mesh, const aiScene *scene) const {
+  Mesh processMesh(aiMesh *mesh, const aiScene *scene) const
+  {
 
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
     std::vector<MeshTexture> textures;
 
     // process vertex positions
-    for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
+    for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
+    {
       Vertex vertex;
 
       glm::vec3 position;
@@ -104,7 +114,8 @@ private:
       normal.z = mesh->mNormals[i].z;
       vertex.normal = normal;
 
-      if (mesh->mTextureCoords[0]) {
+      if (mesh->mTextureCoords[0])
+      {
         glm::vec2 texCoords;
         texCoords.x = mesh->mTextureCoords[0][i].x;
         texCoords.y = mesh->mTextureCoords[0][i].y;
@@ -128,28 +139,28 @@ private:
 
     // process indices
 
-    for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
+    for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
+    {
       aiFace face = mesh->mFaces[i];
-      for (unsigned int j = 0; j < face.mNumIndices; ++j) {
+      for (unsigned int j = 0; j < face.mNumIndices; ++j)
+      {
         indices.push_back(face.mIndices[j]);
       }
     }
 
     // process material
-    if (mesh->mMaterialIndex >= 0) {
 
-      aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+    aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-      std::vector<MeshTexture> diffuseMaps = loadMaterialTextures(
-          material, aiTextureType_DIFFUSE, "texture_diffuse");
+    std::vector<MeshTexture> diffuseMaps = loadMaterialTextures(
+        material, aiTextureType_DIFFUSE, "texture_diffuse");
 
-      textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+    textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-      std::vector<MeshTexture> specularMaps = loadMaterialTextures(
-          material, aiTextureType_SPECULAR, "texture_specular");
+    std::vector<MeshTexture> specularMaps = loadMaterialTextures(
+        material, aiTextureType_SPECULAR, "texture_specular");
 
-      textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-    }
+    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
     MeshData meshData;
     meshData.vertices = vertices;
@@ -161,10 +172,12 @@ private:
 
   std::vector<MeshTexture> loadMaterialTextures(const aiMaterial *mat,
                                                 aiTextureType type,
-                                                std::string typeName) const {
+                                                std::string typeName) const
+  {
     std::vector<MeshTexture> textures;
 
-    for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i) {
+    for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i)
+    {
 
       aiString str;
       mat->GetTexture(type, i, &str);
@@ -174,7 +187,8 @@ private:
       std::map<std::string, MeshTexture>::iterator it =
           textures_loaded.find(texPath);
 
-      if (it == textures_loaded.end()) {
+      if (it == textures_loaded.end())
+      {
 
         MeshTexture meshTexture;
 
@@ -185,8 +199,9 @@ private:
         textures_loaded[texPath] = meshTexture;
 
         textures.push_back(meshTexture);
-
-      } else {
+      }
+      else
+      {
         textures.push_back(it->second);
       }
     }
@@ -196,7 +211,8 @@ private:
 };
 
 gpu::texture::Texture2D textureFromFile(const std::string &path,
-                                        const std::string &directory) {
+                                        const std::string &directory)
+{
 
   std::string filename = directory + separator + path;
 

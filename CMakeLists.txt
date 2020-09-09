@@ -1,10 +1,8 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16)
 
 project(learn-opengl)
 
-if(WIN32)
-	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-endif(WIN32)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
@@ -166,7 +164,7 @@ if(MSVC)
 # The unreferenced parameter is ignored.
     target_compile_options(shared_lib PRIVATE /W4 /WX /wd4100)
 else()
-    target_compile_options(shared_lib PRIVATE -Wall -Wextra -pedantic -Werror)
+    target_compile_options(shared_lib PRIVATE -Wall -Wextra -Wno-unused-parameter)
 endif(MSVC)
 
 foreach (CHAPTER ${CHAPTERS})
@@ -186,7 +184,7 @@ foreach (CHAPTER ${CHAPTERS})
             # The unreferenced parameter is ignored.
             target_compile_options(${DEMO} PRIVATE /W4 /WX /wd4100)
         else()
-            target_compile_options(${DEMO} PRIVATE -Wall -Wextra -pedantic -Werror)
+            target_compile_options(${DEMO} PRIVATE -Wall -Wextra -Wno-unused-parameter)
         endif(MSVC)
         
         file(

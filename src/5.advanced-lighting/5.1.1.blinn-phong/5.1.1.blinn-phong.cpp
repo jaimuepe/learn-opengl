@@ -12,6 +12,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include <vector>
 #include <iostream>
 
 float cameraSpeed = 3.0f;
